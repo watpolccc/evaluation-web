@@ -53,8 +53,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20">
                 <div class="flex items-center cursor-pointer" onclick="navigate('home')">
-                    <div class="bg-blue-900 p-2 rounded-xl text-amber-400 shadow-md hover:scale-105 transition-transform duration-300">
-                        <i data-lucide="award" class="w-8 h-8"></i>
+                    <!-- จุดที่ 1: เปลี่ยนจากไอคอนเป็นรูปโลโก้ -->
+                    <div class="bg-white p-1 rounded-xl shadow-md hover:scale-105 transition-transform duration-300 flex-shrink-0 border border-slate-100">
+                        <!-- นำ URL รูปภาพโลโก้ที่แปลงแล้วมาใส่แทนลิงก์ด้านล่างนี้ได้เลยครับ -->
+                        <img src="https://lh3.googleusercontent.com/d/1vGIYgOy7HBq8OpqTmUyGze7jjKxZcJ_q" alt="โลโก้วิทยาลัย" class="w-10 h-10 object-contain rounded-lg">
                     </div>
                     <div class="ml-3">
                         <span class="font-bold text-lg sm:text-xl text-blue-900 tracking-wide block">งานวัดผลและประเมินผล</span>
@@ -98,9 +100,9 @@
             <!-- ส่วนหัวสถาบันสไตล์ทางการและน่าเชื่อถือ -->
             <header class="hero-pattern text-white py-14 lg:py-20 shadow-inner">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 class="text-3xl md:text-5xl font-bold mb-4 tracking-wide drop-shadow-md">ศูนย์ข้อมูลงานวัดผลและประเมินผล วิทยาลัยพณิชยการเชตุพน</h1>
+                    <h1 class="text-3xl md:text-5xl font-bold mb-4 tracking-wide drop-shadow-md">ศูนย์ข้อมูลงานวัดผลและประเมินผล<br>วิทยาลัยพณิชยการเชตุพน</h1>
                     <p class="text-lg md:text-xl text-blue-100 mb-8 max-w-2xl mx-auto drop-shadow font-light">
-                        รวบรวมไฟล์เอกสารราชการ คู่มือ แบบฟอร์ม ข่าวสาร และสถิติทางการศึกษา
+                        เอกสารราชการ คู่มือ แบบฟอร์ม ข่าวสาร และสถิติทางการศึกษา
                     </p>
                     <div class="flex justify-center gap-4">
                         <button onclick="navigate('documents')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-xl shadow-lg transition-all duration-150 flex items-center hover:scale-105">
@@ -235,27 +237,71 @@
     </div>
 
     <!-- ส่วนท้ายสไตล์แบบทางการน่าเชื่อถือ (Footer) -->
-    <footer class="bg-slate-950 text-slate-300 py-12 mt-auto border-t-4 border-amber-500">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+    <footer class="bg-slate-900 text-slate-300 py-12 mt-auto border-t-4 border-amber-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-10">
+            <!-- คอลัมน์ที่ 1: ตราสัญลักษณ์และข้อมูลหน่วยงาน -->
             <div class="space-y-4">
-                <h3 class="text-white text-lg font-bold flex items-center">
-                    <i data-lucide="award" class="w-5 h-5 mr-2 text-amber-400"></i> งานวัดผลและประเมินผล ฝ่ายวิชาการ
-                </h3>
-                <p class="text-sm leading-relaxed text-slate-400">
-                    วิทยาลัยพณิชยการเชตุพน
-                </p>
+                <div class="flex items-center space-x-3 mb-4">
+                    <!-- จุดที่ 2: เปลี่ยนจากไอคอนเป็นรูปโลโก้ -->
+                    <div class="bg-white p-1.5 rounded-lg flex-shrink-0">
+                        <!-- นำ URL รูปภาพโลโก้ที่แปลงแล้วมาใส่แทนลิงก์ด้านล่างนี้ได้เลยครับ -->
+                        <img src="https://lh3.googleusercontent.com/d/1vGIYgOy7HBq8OpqTmUyGze7jjKxZcJ_q" alt="โลโก้วิทยาลัย" class="w-12 h-12 object-contain rounded-md">
+                    </div>
+                    <div>
+                        <h3 class="text-white text-lg font-bold leading-tight">งานวัดผลและประเมินผล</h3>
+                        <p class="text-amber-400 text-sm font-medium">วิทยาลัยพณิชยการเชตุพน</p>
+                    </div>
+                </div>
             </div>
+            
+            <!-- คอลัมน์ที่ 2: ลิงก์ที่เกี่ยวข้อง (จัดระเบียบใหม่) -->
             <div>
-                <h3 class="text-white text-lg font-bold mb-4">เว็บไซต์ภายนอก</h3>
-                <ul class="space-y-2 text-sm">
-                    <li><a href="https://www.facebook.com/chetupon2020" target="_blank" class="hover:text-amber-400 hover:underline transition-colors flex items-center"><i data-lucide="external-link" class="w-3.5 h-3.5 mr-1.5 opacity-70"></i>งานประชาสัมพันธ์วิทยาลัย</a></li>
-                    <li><a href="https://chetupon.ac.th/" class="hover:text-amber-400 hover:underline transition-colors flex items-center"><i data-lucide="home" class="w-3.5 h-3.5 mr-1.5 opacity-70"></i> เว็บไซต์วิทยาลัย</a></li>
-                    <li><a href="https://www.moe.go.th/" target="_blank" class="hover:text-amber-400 hover:underline transition-colors flex items-center"><i data-lucide="external-link" class="w-3.5 h-3.5 mr-1.5 opacity-70"></i>กระทรวงศึกษาธิการ</a></li>
+                <h3 class="text-white text-lg font-bold mb-5 border-b border-slate-700 pb-2 inline-block">ลิงก์ที่เกี่ยวข้อง</h3>
+                <ul class="space-y-3 text-sm">
+                    <li>
+                        <a href="https://chetupon.ac.th/" target="_blank" class="group flex items-center text-slate-400 hover:text-amber-400 transition-colors">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2 group-hover:bg-amber-400 transition-colors"></span>
+                            เว็บไซต์วิทยาลัยพณิชยการเชตุพน
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.facebook.com/chetupon2020" target="_blank" class="group flex items-center text-slate-400 hover:text-amber-400 transition-colors">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2 group-hover:bg-amber-400 transition-colors"></span>
+                            งานประชาสัมพันธ์ (Facebook)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.moe.go.th/" target="_blank" class="group flex items-center text-slate-400 hover:text-amber-400 transition-colors">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2 group-hover:bg-amber-400 transition-colors"></span>
+                            กระทรวงศึกษาธิการ
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- คอลัมน์ที่ 3: ติดต่อเรา (ข้อมูลสำคัญที่ควรมี) -->
+            <div>
+                <h3 class="text-white text-lg font-bold mb-5 border-b border-slate-700 pb-2 inline-block">ติดต่อหน่วยงาน</h3>
+                <ul class="space-y-3 text-sm text-slate-400">
+                    <li class="flex items-start">
+                        <i data-lucide="map-pin" class="w-5 h-5 text-amber-500 mr-3 flex-shrink-0 mt-0.5"></i>
+                        <span>126 ถ.ประชาอุทิศ<br>แขวงราษฎร์บูรณะ เขตราษฎร์บูรณะ<br>กรุงเทพมหานคร 10140</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i data-lucide="phone" class="w-5 h-5 text-amber-500 mr-3 flex-shrink-0"></i>
+                        <span>02 427 3399</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i data-lucide="mail" class="w-5 h-5 text-amber-500 mr-3 flex-shrink-0"></i>
+                        <span>watpol.ccc@chetupon.ac.th</span>
+                    </li>
                 </ul>
             </div>
         </div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 pt-6 border-t border-slate-900 text-xs text-center text-slate-500">
-            งานวัดผลและประเมินผล ฝ่ายวิชาการ วิทยาลัยพณิชยการเชตุพน &copy; 2026
+        
+        <!-- ส่วนล่างสุด -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-6 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500">
+            <p>งานวัดผลและประเมินผล ฝ่ายวิชาการ วิทยาลัยพณิชยการเชตุพน &copy; 2026</p>
         </div>
     </footer>
 
