@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ศูนย์ข้อมูลงานวัดผลและประเมินผล</title>
+    
+    <!-- Tailwind CSS สำหรับจัดรูปแบบการแสดงผลแบบมีสไตล์ -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons สำหรับไอคอนประกอบทั้งหมดในระบบ -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts: ใช้ Sarabun เป็นฟอนต์หลักเพื่อความเป็นทางการระดับสถาบันศึกษา -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            scroll-behavior: smooth;
+        }
+        /* รูปแบบพื้นหลังแบนเนอร์สไตล์ทางการศึกษา */
+        .hero-pattern {
+            background-color: #1e3a8a;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d97706' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        /* เอฟเฟกต์ Fade-in ตอนกดเปลี่ยนหน้าเว็บ */
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* สถานะแสดงว่าเรากำลังเปิดใช้งานหน้าเมนูนั้นๆ */
+        .nav-link.active {
+            color: #1e3a8a;
+            border-bottom: 3px solid #d97706; /* ตัดด้วยสีทองสง่างาม */
+            font-weight: 600;
+        }
+        .nav-link-mobile.active {
+            color: #1e3a8a;
+            background-color: #f0fdf4;
+            border-left: 4px solid #d97706;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
+
+    <!-- แถบเมนูด้านบน (Navigation Bar) -->
+    <nav class="bg-white shadow-md sticky top-0 z-50 border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20">
+                <div class="flex items-center cursor-pointer" onclick="navigate('home')">
+                    <div class="bg-blue-900 p-2 rounded-xl text-amber-400 shadow-md hover:scale-105 transition-transform duration-300">
+                        <i data-lucide="award" class="w-8 h-8"></i>
+                    </div>
+                    <div class="ml-3">
+                        <span class="font-bold text-lg sm:text-xl text-blue-900 tracking-wide block">งานวัดผลและประเมินผล</span>
+                        <span class="text-xs text-slate-500 block -mt-1 font-medium">ฝ่ายบริหารวิชาการ</span>
+                    </div>
+                </div>
+                
+                <!-- เมนูสำหรับจอคอมพิวเตอร์ (Desktop Menu) -->
+                <div class="hidden md:flex items-center space-x-6 h-full">
+                    <a href="#" onclick="navigate('home')" data-target="home" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">หน้าแรก</a>
+                    <a href="#" onclick="navigate('news')" data-target="news" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">ข่าวประชาสัมพันธ์</a>
+                    <a href="#" onclick="navigate('documents')" data-target="documents" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">ดาวน์โหลดเอกสาร</a>
+                    <a href="#" onclick="navigate('stats')" data-target="stats" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">ข้อมูลสถิติ</a>
+                </div>
+
+                <!-- ปุ่มเมนูสำหรับหน้าจอมือถือ (Mobile Hamburger Menu) -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-slate-600 hover:text-blue-900 focus:outline-none p-2 rounded-lg hover:bg-slate-100 transition-colors">
+                        <i data-lucide="menu" class="w-7 h-7"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- เมนูบนมือถือ (เปิด/ปิดอัตโนมัติ) -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100 pb-4 shadow-xl absolute w-full z-40">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="#" onclick="navigate('home')" data-target="home" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">หน้าแรก</a>
+                <a href="#" onclick="navigate('news')" data-target="news" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">ข่าวประชาสัมพันธ์</a>
+                <a href="#" onclick="navigate('documents')" data-target="documents" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">ดาวน์โหลดเอกสาร</a>
+                <a href="#" onclick="navigate('stats')" data-target="stats" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">ข้อมูลสถิติ</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- พื้นที่แสดงเนื้อหาหลัก (Content View) -->
+    <div class="flex-grow flex flex-col w-full">
+        
+        <!-- ================= หน้าหลัก (PAGE: HOME) ================= -->
+        <div id="page-home" class="page-section flex-grow flex flex-col">
+            <!-- ส่วนหัวสถาบันสไตล์ทางการและน่าเชื่อถือ -->
+            <header class="hero-pattern text-white py-14 lg:py-20 shadow-inner">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <h1 class="text-3xl md:text-5xl font-bold mb-4 tracking-wide drop-shadow-md">ยินดีต้อนรับเข้าสู่ศูนย์กลางข้อมูล</h1>
+                    <p class="text-lg md:text-xl text-blue-100 mb-8 max-w-2xl mx-auto drop-shadow font-light">
+                        รวบรวมไฟล์เอกสารราชการ คู่มือ แบบฟอร์มวัดผลประเมินผล และข่าวสารสถิติเพื่อให้ครูและบุคลากรเข้าถึงง่ายที่สุด
+                    </p>
+                    <div class="flex justify-center gap-4">
+                        <button onclick="navigate('documents')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-xl shadow-lg transition-all duration-150 flex items-center hover:scale-105">
+                            <i data-lucide="download-cloud" class="w-5 h-5 mr-2"></i> ค้นหาแบบฟอร์มเอกสาร
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- แสดงเนื้อหาล่าสุดที่หน้าแรก -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- ฝั่งซ้าย: ข่าวสารเด่น 3 ล่าสุด -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                        <h2 class="text-2xl font-bold text-blue-950 flex items-center">
+                            <i data-lucide="megaphone" class="w-6 h-6 text-amber-500 mr-2"></i> ข่าวประชาสัมพันธ์ล่าสุด
+                        </h2>
+                        <button onclick="navigate('news')" class="text-blue-700 hover:text-blue-900 font-bold text-sm flex items-center">
+                            ดูข่าวทั้งหมด <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                        </button>
+                    </div>
+                    <div id="home-news-container" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <!-- โหลดข้อมูลอัตโนมัติ -->
+                        <div class="col-span-full py-10 text-center text-slate-400">
+                            <i data-lucide="loader" class="w-8 h-8 animate-spin mx-auto mb-2 text-slate-300"></i> กำลังอัปเดตข่าวใหม่...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ฝั่งขวา: รายการดาวน์โหลดด่วน (3-5 แถวแรก) -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm h-fit">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                        <h3 class="font-bold text-lg text-blue-950 flex items-center">
+                            <i data-lucide="files" class="w-5 h-5 text-blue-600 mr-2"></i> เอกสารดาวน์โหลดด่วน
+                        </h3>
+                    </div>
+                    <ul id="home-docs-container" class="space-y-4">
+                        <li class="py-6 text-center text-slate-400 text-sm">
+                            <i data-lucide="loader" class="w-6 h-6 animate-spin mx-auto mb-2 text-slate-300"></i> โหลดแบบฟอร์ม...
+                        </li>
+                    </ul>
+                    <button onclick="navigate('documents')" class="w-full mt-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-sm transition-all text-center flex items-center justify-center">
+                        <i data-lucide="folder" class="w-4 h-4 mr-2 text-slate-600"></i> ไปยังหน้าเอกสารทั้งหมด
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= หน้าข่าวสาร (PAGE: NEWS) ================= -->
+        <div id="page-news" class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full fade-in">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-4 border-b-2 border-slate-200">
+                <div>
+                    <h2 class="text-3xl font-bold text-blue-950 flex items-center">
+                        <div class="p-2 bg-amber-50 rounded-lg mr-3 text-amber-600">
+                            <i data-lucide="megaphone" class="w-8 h-8"></i>
+                        </div>
+                        ข่าวประชาสัมพันธ์
+                    </h2>
+                    <p class="text-slate-500 text-sm mt-1">ติดตามประกาศราชการ กำหนดการสำคัญ และข่าวสารส่งตรงจากงานวัดผล</p>
+                </div>
+                <!-- ค้นหาข่าวอย่างง่าย -->
+                <div class="mt-4 md:mt-0 w-full md:w-72">
+                    <div class="relative">
+                        <i data-lucide="search" class="w-5 h-5 absolute left-3 top-2.5 text-slate-400"></i>
+                        <input id="news-search" type="text" oninput="handleNewsSearch()" placeholder="พิมพ์คำเพื่อค้นหาประกาศ..." class="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none w-full text-sm">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grid 3x3 สำหรับจัดการเนื้อหาข่าว 9 ช่องต่อหน้า -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="news-grid-container">
+                <!-- จะนำข้อมูลมาวางด้วย JS -->
+            </div>
+
+            <!-- ชุดควบคุมการสลับหน้า (Pagination Footer) -->
+            <div class="flex justify-center items-center space-x-2 mt-12 pb-6" id="news-pagination">
+                <!-- ปุ่มสลับหน้าจะสร้างโดยอัตโนมัติตามสัดส่วนข่าวจริง -->
+            </div>
+        </div>
+
+        <!-- ================= หน้าดาวน์โหลดเอกสาร (PAGE: DOCUMENTS) ================= -->
+        <div id="page-documents" class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full fade-in">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-4 border-b-2 border-slate-200">
+                <div>
+                    <h2 class="text-3xl font-bold text-blue-950 flex items-center">
+                        <div class="p-2 bg-blue-50 rounded-lg mr-3 text-blue-600">
+                            <i data-lucide="download-cloud" class="w-8 h-8"></i>
+                        </div>
+                        แบบฟอร์มเอกสารและปฏิทิน
+                    </h2>
+                    <p class="text-slate-500 text-sm mt-1">เลือกดาวน์โหลดคู่มือการวัดผล เอกสาร ปพ. และแบบฟอร์มธุรการวิชาการ</p>
+                </div>
+                <!-- กรองชนิดหมวดหมู่เอกสาร -->
+                <div class="mt-4 md:mt-0 flex flex-col sm:flex-row gap-2">
+                    <select id="doc-category-filter" onchange="handleDocFilter()" class="border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm font-medium">
+                        <option value="">ทุกหมวดหมู่เอกสาร</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Grid 3x3 แสดงรายการเอกสาร 9 ช่องต่อหน้าพร้อมปุ่มดาวน์โหลดคู่ -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="doc-grid-container">
+                <!-- ข้อมูลจะโหลดลงจุดนี้ -->
+            </div>
+
+            <!-- ชุดควบคุมการสลับหน้าของหมวดเอกสาร -->
+            <div class="flex justify-center items-center space-x-2 mt-12 pb-6" id="doc-pagination">
+                <!-- ปุ่มสร้างอัตโนมัติ -->
+            </div>
+        </div>
+
+        <!-- ================= หน้าแสดงข้อมูลสถิติ (PAGE: STATS) ================= -->
+        <div id="page-stats" class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full fade-in">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-4 border-b-2 border-slate-200">
+                <div>
+                    <h2 class="text-3xl font-bold text-blue-950 flex items-center">
+                        <div class="p-2 bg-green-50 rounded-lg mr-3 text-green-600">
+                            <i data-lucide="bar-chart-3" class="w-8 h-8"></i>
+                        </div>
+                        ข้อมูลสถิติและผลประเมิน
+                    </h2>
+                    <p class="text-slate-500 text-sm mt-1">รายงานสถิติจำนวนนักเรียน ผลสัมฤทธิ์ทางการศึกษา และแผนภาพรายงานสรุป</p>
+                </div>
+            </div>
+            
+            <!-- การ์ดแสดงผลข้อมูลสถิติ PDF / รูปภาพ / คำอธิบายแบบสวยงาม -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="stats-grid-container">
+                <!-- แสดงตัวอย่างข้อมูลสถิติที่เปลี่ยนผ่าน Google Sheet -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ส่วนท้ายสไตล์แบบทางการน่าเชื่อถือ (Footer) -->
+    <footer class="bg-slate-950 text-slate-300 py-12 mt-auto border-t-4 border-amber-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="space-y-4">
+                <h3 class="text-white text-lg font-bold flex items-center">
+                    <i data-lucide="award" class="w-5 h-5 mr-2 text-amber-400"></i> งานวัดผลและประเมินผล
+                </h3>
+                <p class="text-sm leading-relaxed text-slate-400">
+                    ฝ่ายบริหารงานวิชาการ พัฒนาขึ้นโดยมุ่งมั่นให้บริการข้อมูลด้วยความสะดวก โปร่งใส และถูกต้องรวดเร็วแก่คณะครูและผู้ที่เกี่ยวข้อง
+                </p>
+                <div class="bg-slate-900 border border-slate-800 p-3 rounded-lg text-xs text-amber-500 inline-block font-medium">
+                    <i data-lucide="database" class="w-3.5 h-3.5 inline mr-1"></i> เชื่อมต่อผ่านฐานข้อมูล Google Sheets CMS
+                </div>
+            </div>
+            <div>
+                <h3 class="text-white text-lg font-bold mb-4">ลิงก์ที่เป็นประโยชน์ภายนอก</h3>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="https://sgs6.bopp-obec.info/" target="_blank" class="hover:text-amber-400 hover:underline transition-colors flex items-center"><i data-lucide="external-link" class="w-3.5 h-3.5 mr-1.5 opacity-70"></i> ระบบบริการจัดการศึกษา (SGS)</a></li>
+                    <li><a href="#" class="hover:text-amber-400 hover:underline transition-colors flex items-center"><i data-lucide="home" class="w-3.5 h-3.5 mr-1.5 opacity-70"></i> เว็บไซต์หลักสถานศึกษา</a></li>
+                    <li><a href="https://www.moe.go.th/" target="_blank" class="hover:text-amber-400 hover:underline transition-colors flex items-center"><i data-lucide="external-link" class="w-3.5 h-3.5 mr-1.5 opacity-70"></i> กระทรวงศึกษาธิการ</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-white text-lg font-bold mb-4">บริการข้อมูลสาธารณะ</h3>
+                <ul class="space-y-3.5 text-sm">
+                    <li class="flex items-start"><i data-lucide="info" class="w-4 h-4 mr-2 mt-0.5 text-amber-400 flex-shrink-0"></i> ช่องทางนี้ไม่มีระบบล็อกอิน เพื่อความสะดวกรวดเร็วในการเข้าถึงเอกสาร</li>
+                    <li class="flex items-center"><i data-lucide="clock" class="w-4 h-4 mr-2 text-amber-400 flex-shrink-0"></i> อัปเดตข้อมูลอัตโนมัติทันทีที่ครูผู้ดูแลแก้ไขผ่านทาง Google Sheet</li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 pt-6 border-t border-slate-900 text-xs text-center text-slate-500">
+            ระบบอัปโหลดและส่งมอบงานเพื่อการพัฒนาที่ยั่งยืน ข้อมูลลิขสิทธิ์ประจำงานวัดผลและประเมินผล &copy; 2026
+        </div>
+    </footer>
+
+    <script>
+        // เรียกใช้งานชุดไอคอนของ Lucide
+        lucide.createIcons();
+
+        // 🔗 URL ปลายทางของ Google Apps Script Web App (API ดักข้อมูลจาก Sheet)
+        // **ให้นำรหัส Web App ID ที่ได้จากการสั่งเผยแพร่มาวางในเครื่องหมายคำพูดด้านล่างนี้ได้เลยครับ**
+        const CONFIG_API_URL = "https://script.google.com/macros/s/YOUR_WEB_APP_ID/exec";
+
+        // ตัวแปรเก็บสะสมข้อมูลทั้งหมดที่โหลดผ่าน API มาเก็บไว้ใน Client
+        let localNewsData = [];
+        let localDocsData = [];
+        let localStatsData = [];
+
+        // ตัวแปรควบคุมการทำงานของหน้าข่าวสาร (Pagination: 3x3 = 9 รายการ)
+        let newsCurrentPage = 1;
+        const newsItemsPerPage = 9;
+        let filteredNews = [];
+
+        // ตัวแปรควบคุมหน้าดาวน์โหลดเอกสาร (Pagination: 3x3 = 9 รายการ)
+        let docCurrentPage = 1;
+        const docItemsPerPage = 9;
+        let filteredDocs = [];
+
+        // ฟังก์ชันระบบสลับหน้า (Single Page Application Router)
+        function navigate(pageId) {
+            // ซ่อนทุกหน้าของระบบ
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // ดึงแสดงหน้าเป้าหมาย
+            const targetPage = document.getElementById('page-' + pageId);
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+            }
+            
+            // ปรับเปลี่ยนสีแถบเมนูในคอมพิวเตอร์ให้ตรงกับหน้าที่เลือกปัจจุบัน
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (link.getAttribute('data-target') === pageId) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            // ปรับแถบเมนูแสดงในมือถือให้ตรงกับที่เลือก
+            document.querySelectorAll('.nav-link-mobile').forEach(link => {
+                if (link.getAttribute('data-target') === pageId) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            // ซ่อนเมนูด้านข้างอัตโนมัติหากมีหน้าจอมือถือเปิดค้างไว้
+            const mobileMenu = document.getElementById('mobile-menu');
+            if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                mobileMenu.classList.add('hidden');
+            }
+
+            // เลื่อนแถบหน้าจอขึ้นไปบนสุด
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // จัดการกดปุ่มเมนูบนแถบมือถือ
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        // ดึงชุดข้อมูลทั้งหมดเมื่อเปิดหน้าเว็บ
+        document.addEventListener('DOMContentLoaded', () => {
+            navigate('home');
+            initiateDataFetch();
+        });
+
+        async function initiateDataFetch() {
+            try {
+                // ตรวจเช็คว่าผู้ใช้ติดตั้ง API จริงหรือยัง หากไม่มีจะรัน Mock Data สวยๆ รอไว้
+                if (CONFIG_API_URL.includes("YOUR_WEB_APP_ID")) {
+                    console.warn("ระบบกำลังทำงานในโหมดโชว์หน้าจำลอง เนื่องจากยังไม่ได้เชื่อมโยง API Key");
+                    activateMockMode();
+                    return;
+                }
+
+                const response = await fetch(CONFIG_API_URL);
+                if (!response.ok) throw new Error("ไม่สามารถเรียกดู API ได้");
+                const result = await response.json();
+
+                if (result.status === 'success' || result) {
+                    // จัดเก็บข้อมูลลงฐานในเครื่อง
+                    localNewsData = result.news || [];
+                    localDocsData = result.documents || [];
+                    localStatsData = result.stats || [];
+
+                    // เรียงข้อมูลจากใหม่สุดไปเก่าสุดสำหรับหน้าประชาสัมพันธ์ข่าวสาร
+                    localNewsData.reverse();
+
+                    // ตั้งค่าหน้าสถิติ
+                    filteredNews = [...localNewsData];
+                    filteredDocs = [...localDocsData];
+
+                    // บรรจุกลุ่มหมวดหมู่ให้กับ Dropdown กรองเอกสาร
+                    setupCategoryFilters();
+
+                    // เริ่มแสดงผล
+                    renderHomePage();
+                    renderNewsPage();
+                    renderDocumentsPage();
+                    renderStatsPage();
+                } else {
+                    throw new Error("ข้อผิดพลาดจาก API");
+                }
+            } catch (error) {
+                console.error("การโหลดข้อมูลผ่าน API ผิดพลาด:", error);
+                activateMockMode(); // เกิดความผิดพลาดโหลด Mock ขึ้นโชว์หน้าโครงสร้างทันทีเพื่อไม่ให้ระบบค้าง
+            }
+        }
+
+        // ตั้งค่าตัวเลือกหมวดหมู่เอกสารให้สร้างรายการกรองอัตโนมัติจากในชีท
+        function setupCategoryFilters() {
+            const selectFilter = document.getElementById('doc-category-filter');
+            const categories = [...new Set(localDocsData.map(doc => doc.category).filter(Boolean))];
+            
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.innerText = cat;
+                selectFilter.appendChild(opt);
+            });
+        }
+
+        // ================= เรนเดอร์หน้าแรก (Home Rendering) =================
+        function renderHomePage() {
+            // 1. เรนเดอร์ข่าวสารล่าสุด 3 ชิ้นแรก
+            const newsContainer = document.getElementById('home-news-container');
+            newsContainer.innerHTML = '';
+            
+            const latestNews = localNewsData.slice(0, 3);
+            if (latestNews.length === 0) {
+                newsContainer.innerHTML = `<div class="col-span-full text-center text-slate-400 py-6">ไม่มีประกาศข่าวในตอนนี้</div>`;
+            } else {
+                latestNews.forEach(item => {
+                    let badgeColor = "bg-blue-100 text-blue-800 border-blue-200";
+                    if (item.type === "ด่วน") badgeColor = "bg-red-100 text-red-800 border-red-200";
+                    else if (item.type === "ข่าวสาร") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-200";
+
+                    const hasLink = item.link && item.link.trim() !== "" && item.link !== "#";
+                    const cardContent = `
+                        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer flex flex-col justify-between h-full">
+                            <div>
+                                <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold border ${badgeColor}">${item.type || 'ประกาศ'}</span>
+                                    <span class="text-xs text-slate-400 flex items-center font-medium"><i data-lucide="calendar" class="w-3.5 h-3.5 mr-1 text-slate-300"></i> ${item.date || '-'}</span>
+                                </div>
+                                <h3 class="font-bold text-slate-800 line-clamp-2 text-md leading-relaxed">${item.title}</h3>
+                            </div>
+                            ${hasLink ? `
+                            <a href="${item.link}" target="_blank" class="mt-4 text-blue-700 hover:text-blue-900 text-xs font-bold flex items-center">
+                                อ่านรายละเอียดเพิ่มเติม <i data-lucide="external-link" class="w-3.5 h-3.5 ml-1"></i>
+                            </a>` : ''}
+                        </div>`;
+                    newsContainer.innerHTML += cardContent;
+                });
+            }
+
+            // 2. เรนเดอร์เอกสารด่วนล่าสุด 3-5 รายการที่หน้าแรก
+            const docsContainer = document.getElementById('home-docs-container');
+            docsContainer.innerHTML = '';
+
+            const latestDocs = localDocsData.slice(0, 5);
+            if (latestDocs.length === 0) {
+                docsContainer.innerHTML = `<li class="text-center text-slate-400 text-sm py-4">ไม่มีเอกสารอัปโหลดด่วน</li>`;
+            } else {
+                latestDocs.forEach(doc => {
+                    // ตรวจหานามสกุลไฟล์เพื่อติดไอคอนที่เหมาะสม
+                    let iconColor = "text-blue-500 bg-blue-50";
+                    let iconName = "file-text";
+                    
+                    const checkType = (doc.type1 || doc.size || '').toLowerCase();
+                    if (checkType.includes('pdf')) { iconColor = "text-red-500 bg-red-50"; iconName = "file-code-2"; }
+                    else if (checkType.includes('xls') || checkType.includes('excel')) { iconColor = "text-emerald-600 bg-emerald-50"; iconName = "table"; }
+                    else if (checkType.includes('doc') || checkType.includes('word')) { iconColor = "text-blue-600 bg-blue-50"; iconName = "file-type-2"; }
+
+                    // ดึงปุ่มดาวน์โหลดที่ใช้งานได้ปุ่มแรกมาโชว์หน้าแรก
+                    const targetLink = doc.link1 || doc.link || '#';
+
+                    docsContainer.innerHTML += `
+                        <li class="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center min-w-0 mr-2">
+                                <div class="p-2 rounded-lg ${iconColor} mr-3">
+                                    <i data-lucide="${iconName}" class="w-5 h-5"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold text-slate-700 truncate">${doc.name}</p>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">${doc.category || 'แบบฟอร์มหลัก'}</p>
+                                </div>
+                            </div>
+                            <a href="${targetLink}" target="_blank" class="p-2 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-lg transition-colors flex-shrink-0" title="ดาวน์โหลดด่วน">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                            </a>
+                        </li>
+                    `;
+                });
+            }
+            lucide.createIcons();
+        }
+
+        // ================= เรนเดอร์หน้าข่าวสาร 3x3 พร้อมสลับหน้า (News Pagination Render) =================
+        function renderNewsPage() {
+            const gridContainer = document.getElementById('news-grid-container');
+            gridContainer.innerHTML = '';
+
+            // ตรวจนับจำนวนไอเท็มทั้งหมดที่จะเอามาตัดแบ่งจัดหน้า
+            const totalItems = filteredNews.length;
+            if (totalItems === 0) {
+                gridContainer.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400">ไม่พบประกาศข่าวประชาสัมพันธ์ที่ค้นหา</div>`;
+                document.getElementById('news-pagination').innerHTML = '';
+                return;
+            }
+
+            // คำนวณช่วงข้อมูล (Slice Range)
+            const startIndex = (newsCurrentPage - 1) * newsItemsPerPage;
+            const endIndex = Math.min(startIndex + newsItemsPerPage, totalItems);
+            const pageItems = filteredNews.slice(startIndex, endIndex);
+
+            // จัดแสดงตามกล่องข่าว Grid 3x3
+            pageItems.forEach(item => {
+                let badgeColor = "bg-blue-100 text-blue-800 border-blue-200";
+                if (item.type === "ด่วน") badgeColor = "bg-red-100 text-red-800 border-red-200";
+                else if (item.type === "ข่าวสาร") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-200";
+
+                const hasLink = item.link && item.link.trim() !== "" && item.link !== "#";
+                gridContainer.innerHTML += `
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between h-64 hover:-translate-y-1">
+                        <div>
+                            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                                <span class="px-3 py-1 rounded-lg text-xs font-bold border ${badgeColor}">${item.type || 'ประกาศ'}</span>
+                                <span class="text-xs text-slate-400 flex items-center font-medium"><i data-lucide="calendar" class="w-4 h-4 mr-1 text-slate-300"></i> ${item.date || '-'}</span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-md leading-relaxed line-clamp-3">${item.title}</h3>
+                        </div>
+                        ${hasLink ? `
+                        <a href="${item.link}" target="_blank" class="w-fit mt-4 text-blue-700 hover:text-blue-900 text-sm font-bold flex items-center hover:underline">
+                            อ่านประกาศฉบับเต็ม <i data-lucide="external-link" class="w-4 h-4 ml-1"></i>
+                        </a>` : `<div class="text-slate-300 text-xs mt-4">ไม่มีลิงก์แนบแนบ</div>`}
+                    </div>
+                `;
+            });
+
+            // สร้างปุ่มสลับหน้าด้านล่าง (Footer Pagination)
+            const totalPages = Math.ceil(totalItems / newsItemsPerPage);
+            buildPaginationFooter('news-pagination', totalPages, newsCurrentPage, (clickedPage) => {
+                newsCurrentPage = clickedPage;
+                renderNewsPage();
+                window.scrollTo({ top: document.getElementById('page-news').offsetTop - 90, behavior: 'smooth' });
+            });
+
+            lucide.createIcons();
+        }
+
+        // จัดการค้นหาข่าว
+        function handleNewsSearch() {
+            const query = document.getElementById('news-search').value.toLowerCase().trim();
+            if (query === '') {
+                filteredNews = [...localNewsData];
+            } else {
+                filteredNews = localNewsData.filter(news => news.title.toLowerCase().includes(query));
+            }
+            newsCurrentPage = 1; // เริ่มนับหนึ่งใหม่ทุกครั้งที่พิมพ์ค้นหา
+            renderNewsPage();
+        }
+
+        // ================= เรนเดอร์หน้าดาวน์โหลดเอกสาร 3x3 (Documents Render & Double Button) =================
+        function renderDocumentsPage() {
+            const gridContainer = document.getElementById('doc-grid-container');
+            gridContainer.innerHTML = '';
+
+            const totalItems = filteredDocs.length;
+            if (totalItems === 0) {
+                gridContainer.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400">ไม่พบเอกสารดาวน์โหลดในหมวดหมู่ที่ระบุ</div>`;
+                document.getElementById('doc-pagination').innerHTML = '';
+                return;
+            }
+
+            // คำนวณขอบเขตหน้า Grid 3x3
+            const startIndex = (docCurrentPage - 1) * docItemsPerPage;
+            const endIndex = Math.min(startIndex + docItemsPerPage, totalItems);
+            const pageItems = filteredDocs.slice(startIndex, endIndex);
+
+            // วนลูปแสดงผลเอกสารแต่ละรายการ
+            pageItems.forEach(doc => {
+                // วิเคราะห์ปุ่มดาวน์โหลด (กรณีมีไฟล์ PDF + Word/Excel ในคอลัมน์ของชีทเดียว)
+                // ตรวจเช็คว่ามี link1 และ link2 หรือไม่ หากไม่มีจะมองหา link ธรรมดา
+                const hasLink1 = doc.link1 && doc.link1.trim() !== "" && doc.link1 !== "#";
+                const hasLink2 = doc.link2 && doc.link2.trim() !== "" && doc.link2 !== "#";
+                const hasFallbackLink = doc.link && doc.link.trim() !== "" && doc.link !== "#";
+
+                // จัดเตรียมปุ่มดาวน์โหลด HTML
+                let downloadButtonsHTML = '';
+
+                // เคสที่ 1: มีทั้งสองลิงก์ (ปุ่มดาวน์โหลดคู่ PDF / Word-Excel)
+                if (hasLink1 && hasLink2) {
+                    const btn1Style = getButtonStyle(doc.type1 || 'PDF');
+                    const btn2Style = getButtonStyle(doc.type2 || 'Word');
+
+                    downloadButtonsHTML = `
+                        <div class="grid grid-cols-2 gap-2 mt-5">
+                            <a href="${doc.link1}" target="_blank" class="${btn1Style.class} flex items-center justify-center py-2.5 px-3 rounded-xl font-bold text-xs transition-colors hover:scale-[1.02] duration-150">
+                                <i data-lucide="${btn1Style.icon}" class="w-4 h-4 mr-1.5 flex-shrink-0"></i> โหลด ${btn1Style.label}
+                            </a>
+                            <a href="${doc.link2}" target="_blank" class="${btn2Style.class} flex items-center justify-center py-2.5 px-3 rounded-xl font-bold text-xs transition-colors hover:scale-[1.02] duration-150">
+                                <i data-lucide="${btn2Style.icon}" class="w-4 h-4 mr-1.5 flex-shrink-0"></i> โหลด ${btn2Style.label}
+                            </a>
+                        </div>
+                    `;
+                }
+                // เคสที่ 2: มีเพียงลิงก์เดียว หรือเป็นลิงก์เดี่ยวจากระบบเก่า
+                else if (hasLink1 || hasFallbackLink) {
+                    const targetLink = hasLink1 ? doc.link1 : doc.link;
+                    const formatType = hasLink1 ? (doc.type1 || 'ไฟล์เอกสาร') : (doc.size || 'ไฟล์เอกสาร');
+                    const btnStyle = getButtonStyle(formatType);
+
+                    downloadButtonsHTML = `
+                        <div class="mt-5">
+                            <a href="${targetLink}" target="_blank" class="${btnStyle.class} w-full flex items-center justify-center py-3 px-4 rounded-xl font-bold text-xs transition-all hover:scale-[1.01] duration-150">
+                                <i data-lucide="${btnStyle.icon}" class="w-4 h-4 mr-1.5"></i> ดาวน์โหลดไฟล์ ${btnStyle.label}
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    downloadButtonsHTML = `
+                        <div class="mt-5 py-2.5 text-center text-slate-300 border border-dashed border-slate-100 rounded-xl text-xs font-semibold">
+                            ไม่มีไฟล์สำหรับดาวน์โหลด
+                        </div>
+                    `;
+                }
+
+                gridContainer.innerHTML += `
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between hover:-translate-y-1">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-slate-200">${doc.category || 'แบบฟอร์ม'}</span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-sm leading-relaxed line-clamp-2 h-10 mb-2">${doc.name}</h3>
+                        </div>
+                        ${downloadButtonsHTML}
+                    </div>
+                `;
+            });
+
+            // สร้าง Pagination
+            const totalPages = Math.ceil(totalItems / docItemsPerPage);
+            buildPaginationFooter('doc-pagination', totalPages, docCurrentPage, (clickedPage) => {
+                docCurrentPage = clickedPage;
+                renderDocumentsPage();
+                window.scrollTo({ top: document.getElementById('page-documents').offsetTop - 90, behavior: 'smooth' });
+            });
+
+            lucide.createIcons();
+        }
+
+        // คืนค่ารูปแบบสไตล์ปุ่มตามนามสกุลไฟล์
+        function getButtonStyle(format) {
+            const f = format.toUpperCase();
+            if (f.includes('PDF')) {
+                return { class: "bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-transparent", icon: "file-code-2", label: "PDF" };
+            } else if (f.includes('XLS') || f.includes('EXCEL') || f.includes('CSV')) {
+                return { class: "bg-emerald-50 hover:bg-emerald-600 text-emerald-600 hover:text-white border border-emerald-200 hover:border-transparent", icon: "table", label: "Excel" };
+            } else if (f.includes('DOC') || f.includes('WORD')) {
+                return { class: "bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white border border-blue-200 hover:border-transparent", icon: "file-type-2", label: "Word" };
+            }
+            return { class: "bg-slate-100 hover:bg-slate-700 text-slate-700 hover:text-white border border-slate-200 hover:border-transparent", icon: "download", label: format };
+        }
+
+        // จัดการคลิกกรองหมวดหมู่เอกสาร
+        function handleDocFilter() {
+            const cat = document.getElementById('doc-category-filter').value;
+            if (cat === '') {
+                filteredDocs = [...localDocsData];
+            } else {
+                filteredDocs = localDocsData.filter(doc => doc.category === cat);
+            }
+            docCurrentPage = 1;
+            renderDocumentsPage();
+        }
+
+        // ================= เรนเดอร์หน้าข้อมูลสถิติ (Statistics Render) =================
+        function renderStatsPage() {
+            const container = document.getElementById('stats-grid-container');
+            container.innerHTML = '';
+
+            if (localStatsData.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
+                        <i data-lucide="bar-chart-2" class="w-12 h-12 mx-auto mb-3 text-slate-300"></i>
+                        <p class="font-bold">ไม่มีข้อมูลรายงานสถิติแสดงในขณะนี้</p>
+                    </div>
+                `;
+                return;
+            }
+
+            localStatsData.forEach(stat => {
+                const hasLink = stat.link && stat.link.trim() !== "" && stat.link !== "#";
+                const hasImg = stat.imageUrl && stat.imageUrl.trim() !== "" && stat.imageUrl !== "#";
+
+                container.innerHTML += `
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+                        <div>
+                            ${hasImg ? `
+                            <div class="h-48 overflow-hidden bg-slate-100 border-b border-slate-200 flex items-center justify-center">
+                                <img src="${stat.imageUrl}" alt="${stat.title}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400/1e3a8a/ffffff?text=STATISTICS'">
+                            </div>` : `
+                            <div class="h-12 bg-blue-900 border-b border-slate-200 flex items-center justify-center text-amber-400">
+                                <i data-lucide="bar-chart-2" class="w-5 h-5 mr-1.5"></i> รายงานเชิงสรุป
+                            </div>`}
+                            <div class="p-6">
+                                <h3 class="font-bold text-slate-800 text-lg mb-2">${stat.title}</h3>
+                                <p class="text-slate-500 text-sm leading-relaxed mb-4">${stat.description || 'ไม่มีคำอธิบายประกอบเพิ่มเติม'}</p>
+                            </div>
+                        </div>
+                        ${hasLink ? `
+                        <div class="px-6 pb-6 pt-2 border-t border-slate-100 mt-2">
+                            <a href="${stat.link}" target="_blank" class="w-full bg-blue-900 hover:bg-slate-900 text-white text-center py-3 px-4 rounded-xl font-bold text-xs transition-colors flex items-center justify-center hover:scale-[1.01]">
+                                <i data-lucide="search" class="w-4 h-4 mr-1.5"></i> เปิดดูรายงานฉบับเต็ม (PDF / ภาพ)
+                            </a>
+                        </div>` : ''}
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        // ================= ฟังก์ชันส่วนเสริมสนับสนุนการสร้างปุ่มจัดหน้าเว็บ (Helper Pagination Generator) =================
+        function buildPaginationFooter(elementId, totalPages, currentPage, onPageClick) {
+            const pagContainer = document.getElementById(elementId);
+            pagContainer.innerHTML = '';
+
+            if (totalPages <= 1) return; // หากมีข้อมูลจำนวนน้อยกว่า 9 ไม่จำเป็นต้องแสดงปุ่มสลับหน้า
+
+            // ปุ่มย้อนกลับ (Previous Button)
+            const prevBtn = document.createElement('button');
+            prevBtn.className = `p-2 rounded-lg border ${currentPage === 1 ? 'text-slate-300 border-slate-100 cursor-not-allowed' : 'text-blue-900 border-slate-200 hover:bg-slate-100'}`;
+            prevBtn.innerHTML = `<i data-lucide="chevron-left" class="w-4 h-4"></i>`;
+            if (currentPage > 1) {
+                prevBtn.addEventListener('click', () => onPageClick(currentPage - 1));
+            }
+            pagContainer.appendChild(prevBtn);
+
+            // ปุ่มตัวเลขแต่ละหน้า
+            for (let i = 1; i <= totalPages; i++) {
+                const numBtn = document.createElement('button');
+                numBtn.className = `w-10 h-10 rounded-lg text-sm font-bold border transition-colors ${i === currentPage ? 'bg-blue-900 text-white border-transparent' : 'text-slate-600 border-slate-200 hover:bg-slate-100'}`;
+                numBtn.innerText = i;
+                numBtn.addEventListener('click', () => onPageClick(i));
+                pagContainer.appendChild(numBtn);
+            }
+
+            // ปุ่มสลับไปข้างหน้า (Next Button)
+            const nextBtn = document.createElement('button');
+            nextBtn.className = `p-2 rounded-lg border ${currentPage === totalPages ? 'text-slate-300 border-slate-100 cursor-not-allowed' : 'text-blue-900 border-slate-200 hover:bg-slate-100'}`;
+            nextBtn.innerHTML = `<i data-lucide="chevron-right" class="w-4 h-4"></i>`;
+            if (currentPage < totalPages) {
+                nextBtn.addEventListener('click', () => onPageClick(currentPage + 1));
+            }
+            pagContainer.appendChild(nextBtn);
+
+            lucide.createIcons();
+        }
+
+        // ================= โหมดรันระบบจำลองที่ปลอดภัยสูง (Safe Mock Data Mode) =================
+        function activateMockMode() {
+            setTimeout(() => {
+                localNewsData = [
+                    { id: 1, title: "กำหนดการตรวจสอบผลการเรียน ภาคเรียนที่ 1 ประจำปีการศึกษา 2567", date: "20 พ.ค. 2567", type: "ประกาศ", link: "#" },
+                    { id: 2, title: "แจ้งคุณครูผู้สอนกำหนดส่งคะแนน ปพ.5 ระบบออนไลน์ ภายในวันที่ 30 มีนาคมนี้", date: "15 มี.ค. 2567", type: "ด่วน", link: "#" },
+                    { id: 3, title: "กำหนดการลงทะเบียนเรียนซ้ำ และสอบแก้ตัว ครั้งที่ 1 และครั้งที่ 2 สำหรับทุกระดับชั้น", date: "10 มี.ค. 2567", type: "ประกาศ", link: "#" },
+                    { id: 4, title: "คู่มือการสมัครสอบแก้ตัวด้วยตนเองแบบออนไลน์ ประจำปีการศึกษา 2567", date: "05 มี.ค. 2567", type: "ข่าวสาร", link: "#" },
+                    { id: 5, title: "เชิญเข้าร่วมสัมมนาแนะแนวการวัดผลหลักสูตรฐานสมรรถนะใหม่ สำหรับครูวิชาการระดับ ม.ต้น", date: "28 ก.พ. 2567", type: "ข่าวสาร", link: "#" }
+                ];
+                
+                localDocsData = [
+                    { id: 1, name: "แบบฟอร์ม ปพ.5 บันทึกผลการพัฒนาคุณภาพผู้เรียน (ประจำห้อง)", category: "แบบฟอร์มครูผู้สอน", link1: "#", type1: "Excel", link2: "#", type2: "Word" },
+                    { id: 2, name: "คำร้องขอสอบแก้ตัวสำหรับนักเรียนที่มีผลการเรียนเป็น ร, มส, 0", category: "แบบฟอร์มนักเรียน", link1: "#", type1: "PDF", link2: "#", type2: "Word" },
+                    { id: 3, name: "คู่มือแนวทางการทำงานวัดผลและประเมินผลกลุ่มวิชาการ ฉบับใหม่", category: "คู่มือการเรียนการสอน", link1: "#", type1: "PDF" },
+                    { id: 4, name: "ปฏิทินปฏิบัติการฝ่ายวิชาการและงานวัดผล ประจำปีการศึกษา 2567", category: "กำหนดการ", link1: "#", type1: "PDF" },
+                    { id: 5, name: "แบบฟอร์มขอส่งแก้ไขผลการเรียนและคะแนนสะสมรายห้องเรียน", category: "แบบฟอร์มครูผู้สอน", link1: "#", type1: "Word" }
+                ];
+
+                localStatsData = [
+                    { id: 1, title: "สถิติอัตราส่วนเกรดเฉลี่ยรายภาคเรียน 1/2567", description: "แผนภูมิความถี่ปริมาณการได้เกรด 4 ของทุกระดับชั้นเรียนแยกตามกลุ่มสาระการเรียนรู้", link: "#", imageUrl: "https://placehold.co/600x400/1e3a8a/ffffff?text=Academic+Results" },
+                    { id: 2, title: "รายงานผลสัมฤทธิ์ระดับโรงเรียน ประจำปีการศึกษา 2566", description: "เอกสารรายงานสรุปส่งออกไปยังสำนักงานเขตพื้นที่การศึกษามัธยมศึกษา มีข้อมูลครบถ้วน", link: "#", imageUrl: "https://placehold.co/600x400/1e3a8a/ffffff?text=Annual+Report" }
+                ];
+
+                filteredNews = [...localNewsData];
+                filteredDocs = [...localDocsData];
+
+                setupCategoryFilters();
+                renderHomePage();
+                renderNewsPage();
+                renderDocumentsPage();
+                renderStatsPage();
+            }, 500);
+        }
+    </script>
+</body>
+</html>
