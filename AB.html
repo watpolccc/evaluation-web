@@ -214,12 +214,6 @@
       border-bottom: 1.5px solid #3b82f6;
     }
 
-    /* บังคับไม่ให้คอลัมน์กั้นย่อหน้าโดนขีดเส้นประ */
-    .memo-preview-box .indent-spacer {
-      display: inline-block;
-      width: 2.5cm;
-    }
-
     /* ตารางภายในบันทึกข้อความ */
     .report-table {
       width: 100%;
@@ -259,17 +253,10 @@
     }
 
     .opinion-box {
-      border: 1px solid #000000 !important;
-      padding: 12px;
-      min-height: 110px;
-      font-size: 14pt;
-      line-height: 1.4;
-    }
-    
-    .teacher-sig-area {
-      text-align: center;
-      padding-top: 20px;
-      line-height: 1.6;
+      border-top: 1px solid #000000 !important;
+      padding-top: 12px;
+      font-size: 16pt;
+      line-height: 1.5;
     }
 
     /* ===== PRINT SYSTEM ===== */
@@ -439,10 +426,10 @@
         </div>
         
         <div class="modal-footer justify-content-between bg-light">
-          <small class="text-muted"><i class="fas fa-info-circle"></i> คุณครูสามารถดับเบิ้ลคลิกเพื่อเลือกคลุมดำ และจัดพริ้นท์ตัวหนา/เอียงตัวอักษรบนบันทึกข้อความด้านบนได้ทันทีก่อนปริ้นท์</small>
+          <small class="text-muted"><i class="fas fa-info-circle"></i> คุณครูสามารถดับเบิ้ลคลิกเพื่อเติมข้อความ หรือปรับแต่งฟอนต์สารบรรณหนา/บางบนหน้ากระดาษได้โดยตรงก่อนพริ้นท์จริง</small>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">แก้ไขข้อมูลระบบ</button>
-            <button type="button" class="btn btn-success fw-bold px-4" onclick="triggerBrowserPrint()"><i class="fas fa-print"></i> 🖨️ สั่งพิมพ์ใบที่เลือก / บันทึก PDF</button>
+            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">แก้ไขสถิตินักเรียน</button>
+            <button type="button" class="btn btn-success fw-bold px-4" onclick="triggerBrowserPrint()"><i class="fas fa-print"></i> 🖨️ สั่งพิมพ์ / บันทึก PDF</button>
           </div>
         </div>
       </div>
@@ -471,7 +458,7 @@
     <!-- แท็บควบคุม -->
     <ul class="nav nav-tabs mb-4" id="appTabs" role="tablist">
       <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="record-tab" data-bs-toggle="tab" data-bs-target="#record-pane" type="button" role="tab"><i class="fas fa-edit"></i> 1. บันทึกการแจ้งเตือน/ขร.</button>
+        <button class="nav-link active" id="record-tab" data-bs-toggle="tab" data-bs-target="#record-pane" type="button" role="tab"><i class="fas fa-edit"></i> 1. บันทึกการแจ้งเตือนเวลาเรียน</button>
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" id="evidence-tab" data-bs-toggle="tab" data-bs-target="#evidence-pane" type="button" role="tab" onclick="renderEvidenceTab()"><i class="fas fa-paperclip"></i> 2. แนบหลักฐานการตักเตือน</button>
@@ -483,7 +470,7 @@
 
     <div class="tab-content" id="appTabsContent">
       
-      <!-- แท็บย่อยที่ 1: บันทึกข้อมูล -->
+      <!-- แท็บที่ 1: บันทึกข้อมูล -->
       <div class="tab-pane fade show active" id="record-pane" role="tabpanel">
         <div class="row g-3 bg-light p-3 rounded border mb-4">
           <div class="col-md-6">
@@ -494,16 +481,23 @@
             <label class="form-label"><b>2. ชื่อครูผู้สอน</b></label>
             <select id="teacherSelect" class="form-select" onchange="onTeacherChange()" disabled><option value="">-- เลือกครูผู้สอน --</option></select>
           </div>
-          <div class="col-md-8">
+          <div class="col-md-6">
             <label class="form-label"><b>3. รายวิชา</b></label>
             <select id="subjectSelect" class="form-select" onchange="onSubjectChange()" disabled><option value="">-- เลือกวิชาเรียน --</option></select>
           </div>
-          <div class="col-md-4">
-            <label class="form-label text-success"><b><i class="fas fa-calculator"></i> คาบเรียนทั้งหมด (ทั้งเทอม)</b></label>
+          <div class="col-md-3">
+            <label class="form-label text-success"><b>คาบเรียนทั้งหมด (ทั้งเทอม)</b></label>
             <input type="number" id="totalPeriods" class="form-control bg-white" placeholder="ดึงอัตโนมัติ..." readonly>
           </div>
+          <div class="col-md-3">
+            <label class="form-label text-primary"><b>4. รอบการรายงานผลเรียน</b></label>
+            <select id="reportPhaseSelect" class="form-select" onchange="showStudentsMulti()">
+              <option value="ครั้งที่ 1">ครั้งที่ 1 (สัปดาห์ที่ 1-7)</option>
+              <option value="ครั้งที่ 2">ครั้งที่ 2 (สัปดาห์ที่ 8-15)</option>
+            </select>
+          </div>
           <div class="col-md-12">
-            <label class="form-label"><b>4. ห้องเรียน</b></label>
+            <label class="form-label"><b>5. ห้องเรียน</b></label>
             <div id="roomCheckboxGroup" class="d-flex flex-wrap gap-3 p-3 border rounded bg-white"><small class="text-muted">กรุณาเลือกวิชาด้านบนก่อน...</small></div>
           </div>
         </div>
@@ -558,21 +552,6 @@
 
       <!-- แท็บย่อยที่ 3: จัดการข้อมูลสำหรับแอดมิน -->
       <div class="tab-pane fade" id="admin-pane" role="tabpanel">
-        <div class="card border-primary mb-4 shadow-sm">
-          <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-history"></i> ระบบเลื่อนชั้นปีนักเรียน และสำรองข้อมูลประจำปี</h5>
-          </div>
-          <div class="card-body">
-            <p class="text-muted mb-3">
-              เมื่อเปลี่ยนปีการศึกษาใหม่ คุณครูแอดมินสามารถเลื่อนระดับชั้นเรียนของนักเรียนทั้งหมดขึ้น 1 ชั้นแบบจัดคั่นด้วยจุด (.) อัตโนมัติ โดยระบบจะบังคับสำรองข้อมูลทั้งหมดใน Spreadsheet ลง Google Drive ก่อนดำเนินการเลื่อนชั้นให้ทันที
-            </p>
-            <button class="btn btn-warning fw-bold p-3 px-4 shadow-sm" onclick="promoteStudentsAndBackupApi()">
-              <i class="fas fa-angle-double-up"></i> ดำเนินการสำรองข้อมูล และเลื่อนชั้นปีนักเรียน
-            </button>
-            <div id="promoteResultArea" class="mt-3"></div>
-          </div>
-        </div>
-
         <div class="alert alert-warning mb-4">
           <i class="fas fa-exclamation-triangle"></i> <b>การนำเข้าฐานข้อมูลวิทยาลัยผ่าน CSV:</b> การอัปโหลดไฟล์จะเป็นการเขียนทับข้อมูลในแผ่นงานเดิมของระบบ กรุณาตรวจสอบหัวตารางให้ตรงตามโครงสร้าง Template ก่อนกดยืนยันอัปโหลด
         </div>
@@ -641,7 +620,7 @@
     </div>
   </div>
 
-  <!-- นำเข้าไลบรารีสคริปต์หลักสำหรับ Bootstrap 5 (สำคัญมาก: บล๊อกปัญหาขาวโล้น) -->
+  <!-- นำเข้าไลบรารีสคริปต์หลักสำหรับ Bootstrap 5 -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
@@ -652,9 +631,6 @@
     let currentUserEmail = "";
     let systemSchoolData = {};
     let pendingEvidenceRecords = [];
-
-    // แอดมินอีเมลสำหรับตรวจสอบจำลองแอดมินใน Mock Mode
-    const ADMIN_EMAILS_MOCK = () => ['watpol.ccc@chetupon.ac.th', 'admin.ccc@chetupon.ac.th'];
 
     // 📦 ฐานข้อมูลจำลอง (Mock Data) สำหรับแสดงผลและสาธิตความสมบูรณ์
     let schoolData = {
@@ -681,24 +657,24 @@
       },
       studentsByRoom: {
         'คพ.2.1': [
-          { name: 'นายสัจจะ เจริญพร', id: '66201020001' },
-          { name: 'นางสาววิภาดา ดั่งใจ', id: '66201020002' },
-          { name: 'นายณัฐพล ชูใจ', id: '66201020003' }
+          { name: 'นายสัจจะ เจริญพร', id: '66201020001', advisor: 'ครูสมใจ รักดี' },
+          { name: 'นางสาววิภาดา ดั่งใจ', id: '66201020002', advisor: 'ครูสมใจ รักดี' },
+          { name: 'นายณัฐพล ชูใจ', id: '66201020003', advisor: 'ครูสมใจ รักดี' }
         ],
         'คพ.2.2': [
-          { name: 'นางสาวดาริกา ยินดี', id: '66201020101' },
-          { name: 'นายชัยวัชร มีสุข', id: '66201020102' }
+          { name: 'นางสาวดาริกา ยินดี', id: '66201020101', advisor: 'ครูนิรุต มีงาม' },
+          { name: 'นายชัยวัชร มีสุข', id: '66201020102', advisor: 'ครูนิรุต มีงาม' }
         ],
         'คพ.3.1': [
-          { name: 'นายเกรียงไกร มุ่งมั่น', id: '65201020001' },
-          { name: 'นางสาวกุลธิดา สวยสม', id: '65201020002' }
+          { name: 'นายเกรียงไกร มุ่งมั่น', id: '65201020001', advisor: 'ครูสิริมา แสนรัก' },
+          { name: 'นางสาวกุลธิดา สวยสม', id: '65201020002', advisor: 'ครูสิริมา แสนรัก' }
         ],
         'DBTech.2.1': [
-          { name: 'นายกิตติคุณ มั่งมี', id: '66301020001' },
-          { name: 'นางสาวสุมิตรา วงศ์ทอง', id: '66301020002' }
+          { name: 'นายกิตติคุณ มั่งมี', id: '66301020001', advisor: 'ครูมงคล ดีพร้อม' },
+          { name: 'นางสาวสุมิตรา วงศ์ทอง', id: '66301020002', advisor: 'ครูมงคล ดีพร้อม' }
         ],
         'DBTech.3.1': [
-          { name: 'นายพงษ์ภัทร สามารถ', id: '65301020001' }
+          { name: 'นายพงษ์ภัทร สามารถ', id: '65301020001', advisor: 'ครูชูเกียรติ มั่นสัจจา' }
         ]
       },
       historyMap: {
@@ -732,7 +708,9 @@
 
     async function requestApi(action, payloadData = {}) {
       if (isMockMode) {
-        return simulateMockResponse(action, payloadData);
+        const res = await simulateMockResponse(action, payloadData);
+        hideLoader();
+        return res;
       }
       
       showLoader('กำลังเชื่อมต่อข้อมูล Google Sheet...');
@@ -894,12 +872,15 @@
       document.getElementById('studentSection').style.display = 'none';
     }
 
+    // แสดงรายชื่อพร้อมตัวกรองและระบบเลือกส่งรายงาน
     function showStudentsMulti() {
       const teacher = document.getElementById('teacherSelect').value;
       const subject = document.getElementById('subjectSelect').value;
       const totalPeriods = parseInt(document.getElementById('totalPeriods').value) || 0;
       const checkedRooms = Array.from(document.querySelectorAll('.room-chk:checked')).map(cb => cb.value);
       const list = document.getElementById('studentList');
+      const currentPhase = document.getElementById('reportPhaseSelect').value;
+      
       list.innerHTML = ''; 
       
       if (checkedRooms.length === 0 || totalPeriods <= 0) { 
@@ -917,34 +898,38 @@
           const hKey = `${teacher}|${subject}|${room}|${st.name}`;
           const mLevel = systemSchoolData.historyMap[hKey] || 0;
           const prevMissed = systemSchoolData.historyMissedMap[hKey] || 0;
-          const rowClass = mLevel > 0 ? 'student-item has-history' : 'student-item bg-light';
-          const historyText = mLevel === 1 ? 'ครั้งที่ 1' : mLevel === 2 ? 'ครั้งที่ 2' : mLevel >= 3 ? 'แจ้ง ขร.' : '';
+          
+          // ตรวจสอบประวัติการส่งรายงานในอดีตเฉพาะหัวข้อรอบที่เลือกไว้
+          let isReportedInThisPhase = false;
+          if (currentPhase === "ครั้งที่ 1" && mLevel >= 1) isReportedInThisPhase = true;
+          if (currentPhase === "ครั้งที่ 2" && mLevel >= 2) isReportedInThisPhase = true;
+
+          const rowClass = isReportedInThisPhase ? 'student-item has-history' : 'student-item bg-light';
           
           studentsHTML += `
-            <div class="${rowClass} row align-items-center g-2" data-name="${st.name}" data-room="${room}">
-              <div class="col-12 col-md-4">
-                <b class="text-primary">${idx+1}. ${st.name}</b><br>
-                <small class="text-muted">
-                  ${mLevel > 0 ? `⚠️ เคยรายงานล่าสุด: <span class="badge bg-warning text-dark">${historyText}</span>` : '🟢 ยังไม่มีประวัติ'}
-                  ${prevMissed > 0 ? `<b class="text-danger">(เคยขาดสะสมก่อนหน้า: ${prevMissed} คาบ)</b>` : ''}
-                </small>
+            <div class="${rowClass} row align-items-center g-2" data-name="${st.name}" data-room="${room}" data-id="${st.id || ''}" data-advisor="${st.advisor || ''}">
+              <div class="col-12 col-md-5 d-flex align-items-center gap-2">
+                <input class="form-check-input report-student-check" type="checkbox" id="check_${room}_${idx}">
+                <div>
+                  <b class="text-primary">${idx+1}. ${st.name}</b><br>
+                  <small class="text-muted">
+                    รหัสประจำตัว: ${st.id || 'ไม่มีข้อมูล'} | ครูที่ปรึกษา: ${st.advisor || 'ไม่มีข้อมูล'}<br>
+                    ${isReportedInThisPhase ? `⚠️ <span class="badge bg-warning text-dark">ส่งรายงานรอบนี้แล้ว</span>` : '🟢 ยังไม่ได้รายงานรอบนี้'}
+                    ${prevMissed > 0 ? `<span class="ms-1">(ขาดสะสมก่อนหน้า: ${prevMissed} คาบ)</span>` : ''}
+                  </small>
+                </div>
               </div>
               <div class="col-6 col-md-3">
                 <div class="input-group input-group-sm">
-                  <span class="input-group-text">ขาดเรียนใหม่</span>
+                  <span class="input-group-text">ขาดเรียนสะสม (คาบ)</span>
                   <input type="number" class="form-control missed-input" min="0" data-prev-missed="${prevMissed}" oninput="calcPercent(this, ${totalPeriods})" placeholder="ระบุคาบ">
                 </div>
               </div>
               <div class="col-6 col-md-2 text-center">
-                <span class="badge bg-secondary w-100 p-2 percent-badge" style="font-size:0.85rem">0%</span>
+                <span class="badge bg-secondary w-100 p-2 percent-badge" style="font-size:0.85rem">0.00%</span>
               </div>
-              <div class="col-12 col-md-3">
-                <select class="form-select form-select-sm level-select">
-                  <option value="" selected>-- เลือกการส่ง --</option>
-                  <option value="ครั้งที่ 1" ${mLevel >= 1 ? 'disabled style="color:#bbb"' : ''}>แจ้งครั้งที่ 1 ${mLevel >= 1 ? '✔️' : ''}</option>
-                  <option value="ครั้งที่ 2" ${(mLevel >= 2 || mLevel < 1) ? 'disabled style="color:#bbb"' : ''}>แจ้งครั้งที่ 2 ${mLevel >= 2 ? '✔️' : ''}</option>
-                  <option value="แจ้ง ขร." ${(mLevel >= 3 || mLevel < 2) ? 'disabled style="color:#bbb"' : ''}>แจ้ง ขร. ${mLevel >= 3 ? '✔️' : ''}</option>
-                </select>
+              <div class="col-12 col-md-2">
+                <input type="text" class="form-control form-control-sm absence-reason" placeholder="สาเหตุการขาดเรียน" value="ขาดเรียน">
               </div>
             </div>`;
         });
@@ -958,20 +943,13 @@
 
     function calcPercent(inputEl, totalPeriods) {
       const missed = parseFloat(inputEl.value) || 0;
-      const prevMissed = parseFloat(inputEl.getAttribute('data-prev-missed')) || 0;
       const row = inputEl.closest('.student-item');
       const badge = row.querySelector('.percent-badge');
+      const checkbox = row.querySelector('.report-student-check');
       
-      if (missed > 0 && missed < prevMissed) {
-        inputEl.classList.add('is-invalid');
-        badge.innerText = "0%";
-        badge.className = "badge bg-danger w-100 p-2 percent-badge";
-        alert(`❌ ผิดพลาดของข้อมูล: จำนวนคาบเรียนที่ขาดล่าสุด (${missed} คาบ) จะต้องไม่น้อยกว่าประวัติแจ้งสะสมเดิมของนักเรียนคนนี้ (${prevMissed} คาบ)`);
-        inputEl.value = prevMissed; 
-        calcPercent(inputEl, totalPeriods);
-        return;
-      } else {
-        inputEl.classList.remove('is-invalid');
+      // ออโต้เลือกติ๊กนักเรียนถ้าคุณครูป้อนคาบเรียนที่ขาดมากกว่า 0 คาบ
+      if (missed > 0) {
+        checkbox.checked = true;
       }
 
       let pct = 0;
@@ -996,7 +974,7 @@
     // =========================================================
     // 🖨️ ระบบสร้างและคัดแยกหน้าบันทึกข้อความ WYSIWYG
     // =========================================================
-    let documentMemosGroup = {}; // กลุ่มสำหรับคัดแยกหน้าเพื่อปริ้นท์ (ครั้งที่ 1, ครั้งที่ 2, แจ้ง ขร.)
+    let documentMemosGroup = {}; // กลุ่มสำหรับแยกหน้าพรีวิวและพิมพ์
     let currentPreviewLevelKey = ""; // หน้าการแจ้งเตือนที่แสดงอยู่ในพรีวิวโมดอล
 
     async function validateAndOpenSummary() {
@@ -1009,26 +987,28 @@
       const evaluations = [];
       let count = 0;
       let hasError = false;
+      const currentPhase = document.getElementById('reportPhaseSelect').value;
 
       // ล้างคลังจัดกลุ่มเก่า
       documentMemosGroup = {
         "ครั้งที่ 1": [],
-        "ครั้งที่ 2": [],
-        "แจ้ง ขร.": []
+        "ครั้งที่ 2": []
       };
 
       document.querySelectorAll('.room-chk:checked').forEach(cb => {
         const room = cb.value;
         
         document.querySelectorAll(`.student-item[data-room="${room}"]`).forEach(stRow => {
-          const levelSel = stRow.querySelector('.level-select');
+          const checkbox = stRow.querySelector('.report-student-check');
           const missedInput = stRow.querySelector('.missed-input');
           const pctText = stRow.querySelector('.percent-badge').innerText;
           const studentName = stRow.getAttribute('data-name');
+          const studentId = stRow.getAttribute('data-id') || '';
+          const advisor = stRow.getAttribute('data-advisor') || '';
+          const reasonInput = stRow.querySelector('.absence-reason');
           
-          if (levelSel.value !== "") {
+          if (checkbox.checked) {
             const missed = parseFloat(missedInput.value) || 0;
-            const prevMissed = parseFloat(missedInput.getAttribute('data-prev-missed')) || 0;
 
             if(!missedInput.value || missed <= 0) {
               alert(`กรุณากรอกจำนวนคาบที่ขาดเรียนจริงของ ${studentName}`);
@@ -1036,22 +1016,18 @@
               return;
             }
 
-            if (missed < prevMissed) {
-              alert(`❌ ข้อมูลเป็นเท็จ: คาบขาดของ ${studentName} น้อยกว่าครั้งก่อน`);
-              hasError = true;
-              return;
-            }
-
             const record = { 
               studentText: studentName, 
-              level: levelSel.value,
+              studentId: studentId,
+              advisor: advisor,
+              level: currentPhase,
               missed: missed,
               percent: pctText,
-              room: room
+              room: room,
+              reason: reasonInput.value || 'ขาดเรียน'
             };
 
-            // ดึงใส่กลุ่มแยกตามระดับใบแจ้ง (คำร้องย่อย) เพื่อพรีวิวแบบ WYSIWYG
-            documentMemosGroup[levelSel.value].push(record);
+            documentMemosGroup[currentPhase].push(record);
             evaluations.push(record);
             count++;
           }
@@ -1059,14 +1035,14 @@
       });
 
       if (hasError) return;
-      if (count === 0) { alert('⚠️ กรุณาระบุระดับการแจ้งเตือนของนักศึกษาอย่างน้อย 1 รายการก่อน'); return; }
+      if (count === 0) { alert('⚠️ กรุณาเลือกติ๊กถูกรายชื่อนักเรียนและระบุคาบขาดเรียนที่ต้องการรายงานอย่างน้อย 1 รายการก่อน'); return; }
 
       const rawFormData = {
         deptName: document.getElementById('deptSelect').value,
         teacherName: document.getElementById('teacherSelect').value,
         subject: document.getElementById('subjectSelect').value,
         totalPeriods: totalPeriods,
-        evaluations: [{ room: "รวมกลุ่ม", absentList: evaluations }] // ตัวจัดกลุ่มความเข้ากันได้หลังบ้าน
+        evaluations: [{ room: "รวมกลุ่ม", absentList: evaluations }]
       };
 
       // บันทึกรายงานเข้าฐานข้อมูลผ่าน Web API
@@ -1095,12 +1071,12 @@
           
           const option = document.createElement('option');
           option.value = levelKey;
-          option.innerText = `หน้าที่ ${++index} - ${levelKey}`;
+          option.innerText = `รอบแจ้งเตือน ${levelKey}`;
           selector.appendChild(option);
+          index++;
         }
       });
 
-      // ดึงสัดส่วนตัวครอบการสลับ
       if (index > 1) {
         document.getElementById('previewPageSelectorWrapper').classList.remove('hidden');
       } else {
@@ -1130,33 +1106,23 @@
       const thaiTotalPeriods = toThaiNumerals(totalPeriods);
       const thaiYear = toThaiNumerals(new Date().getFullYear() + 543);
 
-      let memoSubject = "";
-      let memoContentText = "";
-
-      if (levelKey === "ครั้งที่ 1") {
-        memoSubject = `รายงานการส่งหนังสือแจ้งเตือนผู้ปกครองกรณีเวลาเรียนไม่ถึงเกณฑ์ (ครั้งที่ ๑)`;
-        memoContentText = `โดยพบว่ามีผู้มีเกณฑ์อัตราการขาดเรียนสะสมถึงเกณฑ์ร้อยละ ๑๐ ซึ่งเสี่ยงต่อการไม่มีสิทธิ์เข้ารับการทดสอบปลายภาคเรียน จึงขอรายงานรายชื่อนักเรียน นักศึกษา เพื่อแจ้งครูที่ปรึกษาในการดำเนินการประสานและตักเตือนผู้ปกครองในขั้นต้น (ครั้งที่ ๑) ตามระเบียบของวิทยาลัยฯ ดังรายละเอียดในตารางแนบท้ายนี้`;
-      } else if (levelKey === "ครั้งที่ 2") {
-        memoSubject = `รายงานการส่งหนังสือแจ้งเตือนผู้ปกครองกรณีเวลาเรียนไม่ถึงเกณฑ์ (ครั้งที่ ๒)`;
-        memoContentText = `โดยพบว่ามีผู้มีเกณฑ์อัตราการขาดเรียนสะสมถึงเกณฑ์ร้อยละ ๑๕ ซึ่งเสี่ยงต่อการไม่มีสิทธิ์เข้ารับการทดสอบปลายภาคเรียนเป็นอย่างมาก จึงขอรายงานรายชื่อเพื่อดำเนินการประสานและส่งหนังสือตักเตือนผู้ปกครองอย่างเป็นทางการในขั้นวิกฤต (ครั้งที่ ๒) ตามมาตรการป้องกันปัญหาเวลาเรียนต่ำกว่าเกณฑ์ของวิทยาลัยฯ ดังรายละเอียดในตารางแนบท้ายนี้`;
-      } else {
-        memoSubject = `รายงานผลการพิจารณาให้หมดสิทธิ์เข้ารับการทดสอบปลายภาคเรียน (ข.ร.) เนื่องจากเวลาเรียนต่ำกว่าเกณฑ์`;
-        memoContentText = `เนื่องจากมีอัตราการขาดเรียนสะสมเกินร้อยละ ๒๐ ของเวลาเรียนทั้งหมด ส่งผลให้มีเวลาเรียนไม่ถึงเกณฑ์ร้อยละ ๘๐ บัดนี้สิ้นสุดระยะเวลาผ่อนผันการยื่นคำร้องแก้ตัวและตักเตือนแล้ว ข้าพเจ้าจึงขอส่งรายงานผลการประเมินให้หมดสิทธิ์เข้ารับการทดสอบปลายภาคเรียน (ข.ร.) เพื่อส่งต่อไปยังงานทะเบียนและฝ่ายวิชาการดำเนินการบันทึกตามระเบียบต่อไป ดังรายละเอียดในตารางแนบท้ายนี้`;
-      }
-
       let rowsHtml = "";
       listData.forEach((st, idx) => {
         rowsHtml += `
           <tr>
             <td style="text-align: center;">${toThaiNumerals(idx + 1)}</td>
-            <td style="text-align: center;">${toThaiNumerals(st.room)}</td>
+            <td style="text-align: center;">${toThaiNumerals(st.studentId || '................')}</td>
             <td>${st.studentText}</td>
+            <td style="text-align: center;">${toThaiNumerals(st.room)}</td>
+            <td>${st.advisor || '.....................................'}</td>
             <td style="text-align: center;">${toThaiNumerals(st.missed)} / ${thaiTotalPeriods}</td>
             <td style="text-align: center;">${toThaiNumerals(st.percent)}</td>
+            <td>${st.reason || 'ขาดเรียน'}</td>
           </tr>
         `;
       });
 
+      // ดึงฟอร์มเอกสารทางการ 8 คอลัมน์ที่แก้ไขแบบ WYSIWYG ได้ครบตามต้นแบบคุณครู
       const templateHtml = `
         <table style="width:100%; border-collapse:collapse;">
           <tr>
@@ -1165,35 +1131,34 @@
           </tr>
         </table>
 
-        <table class="meta-table" style="margin-top: 15px;">
-          <tr>
-            <td colspan="2"><span class="label-bold">ส่วนราชการ</span>&nbsp;&nbsp;วิทยาลัยพณิชยการเชตุพน แผนกวิชา${deptName} โทร. ๐-๒๔๒๗-๐๐๕๔</td>
-          </tr>
-          <tr>
-            <td style="width: 45%;"><span class="label-bold">ที่</span>&nbsp;&nbsp;ศธ ๐๖๐๔ / ....................................</td>
-            <td style="width: 55%;"><span class="label-bold">วันที่</span>&nbsp;&nbsp;${thaiDate}</td>
-          </tr>
-          <tr>
-            <td colspan="2"><span class="label-bold">เรื่อง</span>&nbsp;&nbsp;${memoSubject}</td>
-          </tr>
-        </table>
+        <div style="margin-top: 15px; font-size: 16pt; line-height: 1.35;">
+          <div><span class="label-bold" style="font-weight: bold; font-size: 18pt;">ส่วนราชการ</span>&nbsp;&nbsp;งานครูที่ปรึกษา ฝ่ายพัฒนากิจการนักเรียน นักศึกษา วิทยาลัยพณิชยการเชตุพน</div>
+          <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+            <div style="width: 50%;"><span class="label-bold" style="font-weight: bold; font-size: 18pt;">ที่</span>&nbsp;&nbsp;<span contenteditable="true">.........................................................................................</span></div>
+            <div style="width: 50%;"><span class="label-bold" style="font-weight: bold; font-size: 18pt;">วันที่</span>&nbsp;&nbsp;<span contenteditable="true">${thaiDate}</span></div>
+          </div>
+          <div style="margin-top: 5px;"><span class="label-bold" style="font-weight: bold; font-size: 18pt;">เรื่อง</span>&nbsp;&nbsp;แจ้งรายละเอียดการขาดเรียนของนักเรียน นักศึกษา</div>
+        </div>
 
         <div class="divider-line"></div>
 
-        <div class="salutation"><span class="salutation-label">เรียน</span>&nbsp;&nbsp;หัวหน้างานครูที่ปรึกษาและการแนะแนว</div>
+        <div class="salutation" style="font-size: 16pt; margin-bottom: 15px;"><span class="salutation-label" style="font-weight: bold; font-size: 18pt;">เรียน</span>&nbsp;&nbsp;หัวหน้างานครูที่ปรึกษา</div>
         
-        <div class="lead-text">
-          ตามที่ข้าพเจ้า ${teacherName} ได้รับมอบหมายให้ปฏิบัติหน้าที่การเรียนการสอน ประจำภาคเรียนที่ ๑ ปีการศึกษา ${thaiYear} ในรายวิชา ${subject} นั้น บัดนี้ ข้าพเจ้าได้ดำเนินการประเมินผลและตรวจสอบเวลาเรียนของนักเรียน นักศึกษา ${memoContentText}
+        <div class="lead-text" style="text-indent: 1.5cm; text-align: justify; line-height: 1.45;">
+          ด้วยนักเรียน นักศึกษาระดับ <span contenteditable="true"><b>.........................</b></span> ชั้นปีที่ <span contenteditable="true"><b>.........</b></span> สาขาวิชา <span contenteditable="true"><b>.......................................................................................</b></span> ได้ขาดเรียนในรหัสวิชา <span contenteditable="true"><b>..............................................................</b></span> รายวิชา <span contenteditable="true"><b>${subject}</b></span> ตั้งแต่วันที่ <span contenteditable="true"><b>.................................................................................</b></span> ถึงวันที่ <span contenteditable="true"><b>........................................................................................</b></span> รายชื่อต่อไปนี้
         </div>
 
         <table class="report-table">
           <thead>
             <tr>
-              <th style="width: 10%;">ลำดับ</th>
-              <th style="width: 18%;">ห้อง</th>
-              <th style="width: 42%;">ชื่อ - นามสกุล นักเรียน นักศึกษา</th>
-              <th style="width: 18%;">จำนวนคาบที่ขาด</th>
-              <th style="width: 12%;">คิดเป็นร้อยละ</th>
+              <th style="width: 6%; text-align: center;">ที่</th>
+              <th style="width: 14%; text-align: center;">รหัสประจำตัว</th>
+              <th style="width: 20%; text-align: center;">ชื่อ-สกุล</th>
+              <th style="width: 10%; text-align: center;">ห้อง</th>
+              <th style="width: 18%; text-align: center;">ครูที่ปรึกษา</th>
+              <th style="width: 10%; text-align: center;">จำนวน<br>คาบเรียน</th>
+              <th style="width: 10%; text-align: center;">คิดเป็นร้อยละ</th>
+              <th style="width: 12%; text-align: center;">สาเหตุการขาดเรียน</th>
             </tr>
           </thead>
           <tbody>
@@ -1201,46 +1166,28 @@
           </tbody>
         </table>
 
-        <div class="signature-container">
-          <table class="sig-table">
-            <tr>
-              <td style="width: 50%;">
-                <div class="opinion-box">
-                  <b>ความเห็นของหัวหน้างานครูที่ปรึกษาฯ</b><br>
-                  ........................................................................................<br>
-                  ........................................................................................<br>
-                  ลงชื่อ................................................................................<br>
-                  ( นางสาวปภัสสร  นครไพร )<br>
-                  ......./......./.......
-                </div>
-                <div class="opinion-box" style="margin-top: 15px;">
-                  <b>ความเห็นของหัวหน้างานวัดผลและประเมินผล</b><br>
-                  ........................................................................................<br>
-                  ........................................................................................<br>
-                  ลงชื่อ................................................................................<br>
-                  ( นางสาวปิยธิดา  คำพันธุ์ )<br>
-                  ......./......./.......
-                </div>
-              </td>
-              
-              <td style="width: 50%;">
-                <div class="teacher-sig-area">
-                  จึงเรียนมาเพื่อโปรดพิจารณาดำเนินการต่อไป<br><br>
-                  ลงชื่อ..................................................................<br>
-                  ( ${teacherName} )<br>
-                  ครูผู้สอนวิชา ${subject}
-                </div>
-                
-                <div class="opinion-box" style="margin-top: 45px;">
-                  <b>คำสั่ง / ข้อพิจารณาจากผู้อำนวยการวิทยาลัยฯ</b><br>
-                  (&nbsp;&nbsp;) ทราบ และเห็นควรดำเนินการแจ้งเป็นลายลักษณ์อักษร<br>
-                  (&nbsp;&nbsp;) อื่นๆ.....................................................................<br><br>
-                  ลงชื่อ................................................................................<br>
-                  ( ................................................................................ )<br>
-                  ผู้อำนวยการวิทยาลัยพณิชยการเชตุพน
-                </div>
-              </td>
-            </tr>
+        <div class="lead-text" style="text-indent: 1.5cm; margin-top: 15px; margin-bottom: 25px;">
+          จึงเรียนมาเพื่อโปรดทราบและดำเนินการแจ้งครูที่ปรึกษาและพัฒนาปรับปรุงแก้ไข
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-right: 50px; text-align: center; line-height: 1.6; margin-bottom: 30px;">
+          <div>
+            ลงชื่อ............................................................ครูผู้สอน<br>
+            ( ${teacherName} )
+          </div>
+        </div>
+
+        <div class="opinion-box">
+          <b>ความคิดเห็นหัวหน้างานครูที่ปรึกษา</b><br>
+          มอบครูที่ปรึกษาดำเนินการติดตามหาสาเหตุการขาดเรียนและพัฒนาปรับปรุงแก้ไขโดยร่วมกับผู้ปกครอง<br>
+          อื่นๆ.....................................................................................................................................................
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 35px; margin-right: 50px;">
+          <table style="text-align: center; line-height: 1.6; font-size: 16pt; border: none !important;">
+            <tr><td style="border: none !important; padding: 0;">ลงชื่อ.................................................</td></tr>
+            <tr><td style="border: none !important; padding: 0;">(นางสาวอาชัญญา  ศรีวรรธนศิลป์)</td></tr>
+            <tr><td style="border: none !important; padding: 0;">หัวหน้างานครูที่ปรึกษา</td></tr>
           </table>
         </div>
       `;
@@ -1546,38 +1493,6 @@
       }
     }
 
-    // ==========================================
-    // ส่วนเลื่อนระดับชั้นเรียน
-    // ==========================================
-    async function promoteStudentsAndBackupApi() {
-      const pin = prompt("⚠️ ระบบการสำรองข้อมูลและเลื่อนระดับชั้นเรียนประจำปี\nกรุณาพิมพ์ 'PROMOTE' ตัวพิมพ์ใหญ่เพื่อยืนยันการทำรายการลงในกล่องข้อความ:");
-      if (pin !== 'PROMOTE') {
-        alert("ทำรายการยกเลิก: คุณพิมพ์ยืนยันสิทธิ์ไม่ถูกต้อง");
-        return;
-      }
-
-      showLoader('กำลังดำเนินการสำรองฐานข้อมูล และจัดกระบวนเลื่อนชั้นเรียนตามเงื่อนไข...');
-      const res = await requestApi('promoteStudents');
-
-      if (res && res.status === 'success') {
-        hideLoader();
-        document.getElementById('promoteResultArea').innerHTML = `
-          <div class="alert alert-success p-3 mb-0 shadow-sm">
-            <h5 class="fw-bold"><i class="fas fa-check-circle"></i> เลื่อนชั้นเรียนปีการศึกษาสำเร็จ!</h5>
-            <p class="mb-2">ระบบได้จัดระเบียบสำรองประวัติสเปรดชีตแผ่นเดิมไว้เป็นไฟล์ชุดใหม่เรียบร้อยแล้ว</p>
-            <a href="${res.backupUrl}" target="_blank" class="btn btn-sm btn-outline-success">
-              <i class="fas fa-file-excel"></i> เปิดดูลิงก์ไฟล์สำรองประวัติ (Backup URL)
-            </a>
-          </div>
-        `;
-        alert(res.message);
-        await loadSystemData();
-      } else {
-        hideLoader();
-        alert("❌ ล้มเหลว: " + (res ? res.message : "ไม่ได้ระบุสิทธิ์แอดมิน"));
-      }
-    }
-
     function triggerCsvDownload(filename, headers, sampleRow) {
       const csvContent = "\ufeff" + headers + "\n" + sampleRow;
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1695,6 +1610,14 @@
     
     function hideLoader() {
       document.getElementById('loader').style.display = 'none';
+    }
+
+    function toThaiNumerals(str) {
+      if (str === null || str === undefined) return '';
+      const thaiDigits = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'];
+      return String(str).replace(/[0-9]/g, function(ch) {
+        return thaiDigits[Number(ch)];
+      });
     }
   </script>
 </body>
