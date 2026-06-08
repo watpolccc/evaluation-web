@@ -195,13 +195,16 @@
       position: relative;
     }
 
-    /* เส้นประสำหรับระบุฟิลด์ที่แก้ไขตัวหนังสือได้ */
+    /* เส้นประสำหรับระบุฟิลด์ที่แก้ไขตัวหนังสือได้ - ปรับแก้จัดกลางและพอดีกับข้อความ */
     .memo-preview-box [contenteditable="true"] {
       outline: none;
       border-bottom: 1px dashed #94a3b8;
-      padding-bottom: 1px;
-      min-width: 40px;
+      padding: 0 4px;
+      min-width: 25px;
       display: inline-block;
+      text-align: center;
+      vertical-align: baseline;
+      font-weight: bold;
     }
 
     .memo-preview-box [contenteditable="true"]:hover {
@@ -214,18 +217,28 @@
       border-bottom: 1.5px solid #3b82f6;
     }
 
+    /* บังคับไม่ให้คอลัมน์กั้นย่อหน้าโดนขีดเส้นประ */
+    .memo-preview-box .indent-spacer {
+      display: inline-block;
+      width: 2.5cm;
+    }
+
     /* ตารางภายในบันทึกข้อความ */
     .report-table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 15px;
       margin-bottom: 15px;
+      table-layout: fixed; /* ล็อกสัดส่วน ป้องกันอักขระดันให้ผิดส่วน */
     }
     
     .report-table th, .report-table td {
       border: 1px solid #000000 !important;
-      padding: 6px 10px;
-      font-size: 16pt;
+      padding: 4px 6px;
+      font-size: 13.5pt; /* ขนาดอักษรแนบท้ายทางราชการเพื่อไม่ให้บรรทัดสูงและโย้เย้ */
+      line-height: 1.2;
+      word-break: keep-all; /* ป้องกันการแยกวรรณยุกต์และตัวสะกดไทย */
+      overflow-wrap: break-word;
     }
     
     .report-table th {
@@ -253,9 +266,16 @@
     }
 
     .opinion-box {
-      border-top: 1px solid #000000 !important;
-      padding-top: 12px;
-      font-size: 16pt;
+      border: 1px solid #000000 !important;
+      padding: 10px;
+      min-height: 110px;
+      font-size: 14pt;
+      line-height: 1.3;
+    }
+    
+    .teacher-sig-area {
+      text-align: center;
+      padding-top: 15px;
       line-height: 1.5;
     }
 
@@ -426,10 +446,10 @@
         </div>
         
         <div class="modal-footer justify-content-between bg-light">
-          <small class="text-muted"><i class="fas fa-info-circle"></i> คุณครูสามารถดับเบิ้ลคลิกเพื่อเติมข้อความ หรือปรับแต่งฟอนต์สารบรรณหนา/บางบนหน้ากระดาษได้โดยตรงก่อนพริ้นท์จริง</small>
+          <small class="text-muted"><i class="fas fa-info-circle"></i> คุณครูสามารถดับเบิ้ลคลิกเพื่อเลือกคลุมดำ และจัดพริ้นท์ตัวหนา/เอียงตัวอักษรบนบันทึกข้อความด้านบนได้ทันทีก่อนปริ้นท์</small>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">แก้ไขสถิตินักเรียน</button>
-            <button type="button" class="btn btn-success fw-bold px-4" onclick="triggerBrowserPrint()"><i class="fas fa-print"></i> 🖨️ สั่งพิมพ์ / บันทึก PDF</button>
+            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">แก้ไขข้อมูลระบบ</button>
+            <button type="button" class="btn btn-success fw-bold px-4" onclick="triggerBrowserPrint()"><i class="fas fa-print"></i> 🖨️ สั่งพิมพ์ใบที่เลือก / บันทึก PDF</button>
           </div>
         </div>
       </div>
@@ -625,7 +645,7 @@
 
   <script>
     // ⚠️ นำ URL เว็บแอป (Web App URL) ที่ได้จาก Google Apps Script มาใส่ไว้ตรงเครื่องหมายคำพูดด้านล่างนี้ 
-    const GAS_WEB_APP_URL = "วาง_URL_ของ_GAS_ที่นี่";
+    const GAS_WEB_APP_URL = "AKfycbxsXWRYVb534NjGwW8VzvGQIBUVdIPSaOsnzj9PfRcvUf6RBqBb-kbTtnX4njae2c75";
 
     let isMockMode = false;
     let currentUserEmail = "";
@@ -638,22 +658,30 @@
       deptData: {
         'การบัญชี': {
           'ครูสมจิต ห่วงเรียน': {
-            'บัญชีเบื้องต้น': ['คพ.2.1', 'คพ.2.2'],
-            'บัญชีต้นทุน': ['คพ.3.1']
+            '30201-2001 บัญชีเบื้องต้น': ['คพ.2.1', 'คพ.2.2'],
+            '30201-2005 บัญชีต้นทุน': ['คพ.3.1']
           }
         },
         'เทคโนโลยีธุรกิจดิจิทัล': {
           'ครูปภาพัส สมองดี': {
-            'การพัฒนาเว็บไซต์': ['DBTech.2.1', 'DBTech.2.2'],
-            'การตลาดออนไลน์': ['DBTech.3.1']
+            '30204-2001 การพัฒนาเว็บไซต์': ['DBTech.2.1', 'DBTech.2.2'],
+            '30204-2002 การตลาดออนไลน์': ['DBTech.3.1']
           }
         }
       },
+      roomToLevel: {
+        'คพ.2.1': 'ปวช.2',
+        'คพ.2.2': 'ปวช.2',
+        'คพ.3.1': 'ปวช.3',
+        'DBTech.2.1': 'ปวส.2',
+        'DBTech.2.2': 'ปวส.2',
+        'DBTech.3.1': 'ปวส.2'
+      },
       subjectPeriods: {
-        'การบัญชี|ครูสมจิต ห่วงเรียน|บัญชีเบื้องต้น': 40,
-        'การบัญชี|ครูสมจิต ห่วงเรียน|บัญชีต้นทุน': 36,
-        'เทคโนโลยีธุรกิจดิจิทัล|ครูปภาพัส สมองดี|การพัฒนาเว็บไซต์': 40,
-        'เทคโนโลยีธุรกิจดิจิทัล|ครูปภาพัส สมองดี|การตลาดออนไลน์': 32
+        'การบัญชี|ครูสมจิต ห่วงเรียน|30201-2001 บัญชีเบื้องต้น': 40,
+        'การบัญชี|ครูสมจิต ห่วงเรียน|30201-2005 บัญชีต้นทุน': 36,
+        'เทคโนโลยีธุรกิจดิจิทัล|ครูปภาพัส สมองดี|30204-2001 การพัฒนาเว็บไซต์': 40,
+        'เทคโนโลยีธุรกิจดิจิทัล|ครูปภาพัส สมองดี|30204-2002 การตลาดออนไลน์': 32
       },
       studentsByRoom: {
         'คพ.2.1': [
@@ -678,23 +706,23 @@
         ]
       },
       historyMap: {
-        'ครูสมจิต ห่วงเรียน|บัญชีเบื้องต้น|คพ.2.1|นางสาววิภาดา ดั่งใจ': 1, 
-        'ครูปภาพัส สมองดี|การพัฒนาเว็บไซต์|DBTech.2.1|นายกิตติคุณ มั่งมี': 2 
+        'ครูสมจิต ห่วงเรียน|30201-2001 บัญชีเบื้องต้น|คพ.2.1|นางสาววิภาดา ดั่งใจ': 1, 
+        'ครูปภาพัส สมองดี|30204-2001 การพัฒนาเว็บไซต์|DBTech.2.1|นายกิตติคุณ มั่งมี': 2 
       },
       historyMissedMap: {
-        'ครูสมจิต ห่วงเรียน|บัญชีเบื้องต้น|คพ.2.1|นางสาววิภาดา ดั่งใจ': 4, 
-        'ครูปภาพัส สมองดี|การพัฒนาเว็บไซต์|DBTech.2.1|นายกิตติคุณ มั่งมี': 6 
+        'ครูสมจิต ห่วงเรียน|30201-2001 บัญชีเบื้องต้น|คพ.2.1|นางสาววิภาดา ดั่งใจ': 4, 
+        'ครูปภาพัส สมองดี|30204-2001 การพัฒนาเว็บไซต์|DBTech.2.1|นายกิตติคุณ มั่งมี': 6 
       }
     };
 
     let rawPendingRecords = [
-      { row: 2, timestamp: '08/06/2026 10:00', teacher: 'ครูสมจิต ห่วงเรียน', department: 'การบัญชี', subject: 'บัญชีเบื้องต้น', room: 'คพ.2.1', student: 'นางสาววิภาดา ดั่งใจ', level: 'ครั้งที่ 1', missed: 4, total: 40, percent: 0.10 },
-      { row: 3, timestamp: '08/06/2026 11:15', teacher: 'ครูปภาพัส สมองดี', department: 'เทคโนโลยีธุรกิจดิจิทัล', subject: 'การพัฒนาเว็บไซต์', room: 'DBTech.2.1', student: 'นายกิตติคุณ มั่งมี', level: 'ครั้งที่ 2', missed: 6, total: 40, percent: 0.15 }
+      { row: 2, timestamp: '08/06/2026 10:00', teacher: 'ครูสมจิต ห่วงเรียน', department: 'การบัญชี', subject: '30201-2001 บัญชีเบื้องต้น', room: 'คพ.2.1', student: 'นางสาววิภาดา ดั่งใจ', level: 'ครั้งที่ 1', missed: 4, total: 40, percent: 0.10 },
+      { row: 3, timestamp: '08/06/2026 11:15', teacher: 'ครูปภาพัส สมองดี', department: 'เทคโนโลยีธุรกิจดิจิทัล', subject: '30204-2001 การพัฒนาเว็บไซต์', room: 'DBTech.2.1', student: 'นายกิตติคุณ มั่งมี', level: 'ครั้งที่ 2', missed: 6, total: 40, percent: 0.15 }
     ];
 
     // เช็กสถานะการตั้งค่าพารามิเตอร์ GAS URL หากยังไม่ใส่ให้รันเป็น Mock Preview จำลองแทน
     window.addEventListener('DOMContentLoaded', () => {
-      if (GAS_WEB_APP_URL === "วาง_URL_ของ_GAS_ที่นี่" || GAS_WEB_APP_URL.trim() === "") {
+      if (GAS_WEB_APP_URL === "AKfycbxsXWRYVb534NjGwW8VzvGQIBUVdIPSaOsnzj9PfRcvUf6RBqBb-kbTtnX4njae2c75" || GAS_WEB_APP_URL.trim() === "") {
         isMockMode = true;
         document.getElementById('gasUrlWarning').style.display = 'block';
       }
@@ -775,7 +803,7 @@
       if (accessRes.isAdmin) {
         document.getElementById('adminTabLi').style.display = 'block';
       } else {
-        document.getElementById('adminTabLi').style.display = 'none';
+        document.getElementById('adminTabLi').style.none;
       }
 
       await loadSystemData();
@@ -1090,6 +1118,26 @@
       previewModal.show();
     }
 
+    // ฟังก์ชันย่อยสำหรับสกัดดึง "รหัสวิชา" และ "ชื่อวิชา" ออกจากตัวอักษรกล่องรายวิชาเดี่ยว
+    function extractSubjectInfo(subjectStr) {
+      if (!subjectStr) {
+        return { code: "................................", name: "................................" };
+      }
+      // ตรวจสอบโครงสร้าง: รหัสวิชา (เช่น xxxx-xxxxx หรือ xxxxx-xxxx) นำหน้าด้วยตัวเลข และตามด้วยชื่อรายวิชา
+      const codeRegex = /^([0-9]+-[0-9]+(-[0-9]+)?)\s*(.*)$/;
+      const match = subjectStr.match(codeRegex);
+      if (match) {
+        return {
+          code: match[1],
+          name: match[3].trim()
+        };
+      }
+      return {
+        code: "................................",
+        name: subjectStr
+      };
+    }
+
     // เปลี่ยนแปลงข้อมูลในหน้าพรีวิวกระดาษเมื่อกดย้ายหน้า Dropdown
     function switchPreviewPage(levelKey) {
       currentPreviewLevelKey = levelKey;
@@ -1098,31 +1146,49 @@
 
       const teacherName = document.getElementById('teacherSelect').value;
       const deptName = document.getElementById('deptSelect').value;
-      const subject = document.getElementById('subjectSelect').value;
+      const subjectRaw = document.getElementById('subjectSelect').value;
       const totalPeriods = document.getElementById('totalPeriods').value;
+
+      // สกัดรหัสวิชาและชื่อวิชาที่สะอาดเรียบร้อย
+      const subjectInfo = extractSubjectInfo(subjectRaw);
+      
+      // แปลงรหัสวิชาเป็นเลขไทย
+      const thaiSubjectCode = toThaiNumerals(subjectInfo.code);
+
+      // ดึงระดับการศึกษาและปีการศึกษาจากชื่อห้องของนักเรียนคนแรกอย่างชาญฉลาดผ่าน roomToLevel
+      const firstStudent = listData[0];
+      const roomKey = firstStudent.room;
+      const mappingLevelStr = systemSchoolData.roomToLevel && systemSchoolData.roomToLevel[roomKey] 
+                               ? systemSchoolData.roomToLevel[roomKey] 
+                               : "ปวช.1";
+      
+      const levelParts = mappingLevelStr.split('.');
+      const derivedLevel = levelParts[0] || "ปวช";
+      const derivedYearNum = levelParts[1] || "1";
 
       const formattedDate = new Date().toLocaleDateString('th-TH', {year: 'numeric', month: 'long', day: 'numeric'});
       const thaiDate = toThaiNumerals(formattedDate);
       const thaiTotalPeriods = toThaiNumerals(totalPeriods);
       const thaiYear = toThaiNumerals(new Date().getFullYear() + 543);
+      const thaiDerivedYear = toThaiNumerals(derivedYearNum);
 
       let rowsHtml = "";
       listData.forEach((st, idx) => {
         rowsHtml += `
           <tr>
-            <td style="text-align: center;">${toThaiNumerals(idx + 1)}</td>
-            <td style="text-align: center;">${toThaiNumerals(st.studentId || '................')}</td>
-            <td>${st.studentText}</td>
-            <td style="text-align: center;">${toThaiNumerals(st.room)}</td>
-            <td>${st.advisor || '.....................................'}</td>
-            <td style="text-align: center;">${toThaiNumerals(st.missed)} / ${thaiTotalPeriods}</td>
-            <td style="text-align: center;">${toThaiNumerals(st.percent)}</td>
-            <td>${st.reason || 'ขาดเรียน'}</td>
+            <td style="text-align: center; width: 5%;">${toThaiNumerals(idx + 1)}</td>
+            <td style="text-align: center; width: 18%;">${toThaiNumerals(st.studentId || '................')}</td>
+            <td style="text-align: left; width: 20%;">${st.studentText}</td>
+            <td style="text-align: center; width: 10%;">${toThaiNumerals(st.room)}</td>
+            <td style="text-align: left; width: 20%;">${st.advisor || '.....................................'}</td>
+            <td style="text-align: center; width: 10%;">${toThaiNumerals(st.missed)} / ${thaiTotalPeriods}</td>
+            <td style="text-align: center; width: 8%;">${toThaiNumerals(st.percent)}</td>
+            <td style="text-align: center; width: 9%;">${st.reason || 'ขาดเรียน'}</td>
           </tr>
         `;
       });
 
-      // ดึงฟอร์มเอกสารทางการ 8 คอลัมน์ที่แก้ไขแบบ WYSIWYG ได้ครบตามต้นแบบคุณครู
+      // ดึงฟอร์มเอกสารทางการ 8 คอลัมน์ที่แก้ไขแบบ WYSIWYG ได้ครบถ้วนสมบูรณ์ และจัดหน้าอย่างสมดุล (แก้ช่องว่างด้านหน้าตามความต้องการ)
       const templateHtml = `
         <table style="width:100%; border-collapse:collapse;">
           <tr>
@@ -1131,34 +1197,32 @@
           </tr>
         </table>
 
-        <div style="margin-top: 15px; font-size: 16pt; line-height: 1.35;">
+        <div style="margin-top: 15px; font-size: 16pt; line-height: 1;">
           <div><span class="label-bold" style="font-weight: bold; font-size: 18pt;">ส่วนราชการ</span>&nbsp;&nbsp;งานครูที่ปรึกษา ฝ่ายพัฒนากิจการนักเรียน นักศึกษา วิทยาลัยพณิชยการเชตุพน</div>
           <div style="display: flex; justify-content: space-between; margin-top: 5px;">
-            <div style="width: 50%;"><span class="label-bold" style="font-weight: bold; font-size: 18pt;">ที่</span>&nbsp;&nbsp;<span contenteditable="true">.........................................................................................</span></div>
+            <div style="width: 50%;"><span class="label-bold" style="font-weight: bold; font-size: 18pt;">ที่</span>&nbsp;&nbsp;<span contenteditable="true"></span></div>
             <div style="width: 50%;"><span class="label-bold" style="font-weight: bold; font-size: 18pt;">วันที่</span>&nbsp;&nbsp;<span contenteditable="true">${thaiDate}</span></div>
           </div>
           <div style="margin-top: 5px;"><span class="label-bold" style="font-weight: bold; font-size: 18pt;">เรื่อง</span>&nbsp;&nbsp;แจ้งรายละเอียดการขาดเรียนของนักเรียน นักศึกษา</div>
         </div>
 
-        <div class="divider-line"></div>
-
         <div class="salutation" style="font-size: 16pt; margin-bottom: 15px;"><span class="salutation-label" style="font-weight: bold; font-size: 18pt;">เรียน</span>&nbsp;&nbsp;หัวหน้างานครูที่ปรึกษา</div>
         
-        <div class="lead-text" style="text-indent: 1.5cm; text-align: justify; line-height: 1.45;">
-          ด้วยนักเรียน นักศึกษาระดับ <span contenteditable="true"><b>.........................</b></span> ชั้นปีที่ <span contenteditable="true"><b>.........</b></span> สาขาวิชา <span contenteditable="true"><b>.......................................................................................</b></span> ได้ขาดเรียนในรหัสวิชา <span contenteditable="true"><b>..............................................................</b></span> รายวิชา <span contenteditable="true"><b>${subject}</b></span> ตั้งแต่วันที่ <span contenteditable="true"><b>.................................................................................</b></span> ถึงวันที่ <span contenteditable="true"><b>........................................................................................</b></span> รายชื่อต่อไปนี้
+        <div class="lead-text" style="text-indent: 1.5cm; text-align: justify; line-height: 1;">
+          ตามที่ข้าพเจ้าได้รับมองหมายให้จัดการเรียนการสอนนักเรียนนักศึกษา ระดับ<span contenteditable="true" style="text-indent: 0.1cm;"><b>${derivedLevel}</b></span>ชั้นปีที่<span contenteditable="true" style="text-indent: 0.1cm;"><b>${thaiDerivedYear}</b></span><br>สาขาวิชา<span contenteditable="true" style="text-indent: 0.1cm;"><b>${deptName}</b></span>จึงขอรายงานการขาดเรียนของนักเรียนนักศึกษา รหัสวิชา<span contenteditable="true" style="text-indent: 0.1cm;"><b>${thaiSubjectCode}</b></span>รายวิชา<span contenteditable="true" style="text-indent: 0.1cm;"><b>${subjectInfo.name}</b></span>รายชื่อดังต่อไปนี้
         </div>
 
         <table class="report-table">
           <thead>
             <tr>
-              <th style="width: 6%; text-align: center;">ที่</th>
-              <th style="width: 14%; text-align: center;">รหัสประจำตัว</th>
+              <th style="width: 5%; text-align: center;">ที่</th>
+              <th style="width: 18%; text-align: center;">รหัสประจำตัว</th>
               <th style="width: 20%; text-align: center;">ชื่อ-สกุล</th>
               <th style="width: 10%; text-align: center;">ห้อง</th>
-              <th style="width: 18%; text-align: center;">ครูที่ปรึกษา</th>
+              <th style="width: 20%; text-align: center;">ครูที่ปรึกษา</th>
               <th style="width: 10%; text-align: center;">จำนวน<br>คาบเรียน</th>
-              <th style="width: 10%; text-align: center;">คิดเป็นร้อยละ</th>
-              <th style="width: 12%; text-align: center;">สาเหตุการขาดเรียน</th>
+              <th style="width: 8%; text-align: center;">คิดเป็นร้อยละ</th>
+              <th style="width: 9%; text-align: center;">สาเหตุ</th>
             </tr>
           </thead>
           <tbody>
