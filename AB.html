@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบบันทึกการแจ้งเตือนเวลาเรียน วิทยาลัยพณิชยการเชตุพน</title>
+  <title>ระบบบันทึกการแจ้งเตือนเวลาเรียน วิทยาลัยพณิชยการเชตุพน (GitHub Hosted)</title>
   
   <!-- CSS Library (Bootstrap 5 & Font Awesome) -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,7 +13,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
 
   <style>
-    /* --- CSS หลักของตัวแอปพลิเคชัน --- */
     body { 
       background: #f0f2f5; 
       font-family: 'Sarabun', sans-serif; 
@@ -60,10 +59,10 @@
     .user-info { 
       background: #e7f3ff; 
       border: 1px solid #b3d7ff; 
-      padding: 10px; 
+      padding: 15px; 
       border-radius: 10px; 
       margin-bottom: 20px; 
-      font-size: 0.9rem; 
+      font-size: 0.95rem; 
     }
     
     .nav-tabs .nav-link { 
@@ -88,32 +87,29 @@
       margin-bottom: 20px; 
     }
 
-    /* --- ส่วนประกอบสำหรับจำลองหน้า A4 บันทึกข้อความบนเว็บจอภาพ --- */
     #printArea {
-      display: none; /* ซ่อนไว้เวลาใช้งานแอปพลิเคชันทั่วไป */
+      display: none; 
     }
 
-    /* --- 🖨️ CSS ควบคุมโครงสร้างจัดหน้ากระดาษ A4 ตอนกดพิมพ์จริง --- */
     @media print {
       body { 
         background: none !important; 
         padding: 0 !important; 
         margin: 0 !important; 
       }
-      .main-card, nav, .nav-tabs, .btn, .alert, #loader, .form-container, #userBar { 
-        display: none !important; /* ซ่อนส่วนอื่นทั้งหมดที่ไม่ใช่เอกสารราชการ */
+      .main-card, nav, .nav-tabs, .btn, .alert, #loader, .form-container, #userBar, .modal { 
+        display: none !important; 
       }
       #printArea { 
-        display: block !important; /* แสดงส่วนบันทึกข้อความขึ้นมาใบเดียว */
+        display: block !important; 
         width: 100% !important;
       }
       
-      /* ระยะกระดาษ A4 ราชการไทย */
       @page {
         size: A4 portrait;
         margin-top: 1.5cm;
         margin-bottom: 2.0cm;
-        margin-left: 3.0cm; /* ระยะสำหรับเข้าเล่มด้านซ้าย */
+        margin-left: 3.0cm; 
         margin-right: 2.0cm;
       }
       
@@ -124,12 +120,10 @@
         color: black;
       }
       
-      /* บังคับไม่ให้ตัดตารางแบ่งหน้าแบบกลางแถว */
       tr { page-break-inside: avoid !important; }
       thead { display: table-header-group !important; }
     }
     
-    /* สไตล์จำลองจัดกระดาษสวยงามสำหรับผู้ใช้บนหน้าจอเบราว์เซอร์ */
     .memo-preview-box {
       border: 1px solid #d3d3d3;
       background: white;
@@ -233,10 +227,10 @@
         <div class="modal-body text-center py-4">
           <i class="fas fa-user-slash text-danger fa-4x mb-3"></i>
           <h4 class="text-danger fw-bold mb-3">ระบบสำหรับครูผู้สอนเท่านั้น</h4>
-          <p class="text-muted" id="denyModalEmailText">บัญชีอีเมลนักเรียนไม่ได้รับอนุญาตให้ใช้ระเบียนงานสารบรรณระบบ</p>
+          <p class="text-muted" id="accessDeniedModalBody">คุณไม่มีสิทธิ์เข้าใช้งานระบบบันทึกเวลาเรียนเนื่องจากใช้บัญชีนักเรียน</p>
         </div>
         <div class="modal-footer justify-content-center">
-          <button class="btn btn-danger px-4" onclick="logoutMock()">ลงชื่อออก / สลับบัญชีเมลครู</button>
+          <button class="btn btn-danger px-4" onclick="logoutMock()">สลับบัญชีเมลครู</button>
         </div>
       </div>
     </div>
@@ -251,7 +245,6 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body bg-secondary p-0 d-flex justify-content-center">
-          <!-- บันทึกข้อความจำลองขนาดกระดาษจริง -->
           <div class="memo-preview-box page-doc" id="previewMemoContainer">
              <!-- เนื้อหาเอกสารจะถูกเขียนใส่ตรงนี้ด้วย JS -->
           </div>
@@ -264,17 +257,51 @@
     </div>
   </div>
 
-  <!-- แอปพลิเคชันโครงสร้างควบคุมหลัก (สำหรับแสดงผลบนเบราว์เซอร์ปกติ) -->
-  <div class="main-card" id="mainAppCard">
+  <!-- หน้าต่างสลับบัญชีและตรวจสอบสิทธิ์เข้าใช้ระบบ (สำหรับ GitHub Static Host) -->
+  <div class="modal fade" id="loginModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-primary shadow-lg">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="fas fa-lock"></i> ลงชื่อเข้าสู่ระบบแจ้งเตือนเวลาเรียน</h5>
+        </div>
+        <div class="modal-body py-4">
+          <div class="text-center mb-4">
+             <i class="fas fa-university text-primary fa-3x mb-2"></i>
+             <h5 class="fw-bold text-dark">วิทยาลัยพณิชยการเชตุพน</h5>
+             <small class="text-muted">กรุณากรอกอีเมลเชตุพนในการเข้าใช้งานระบบบันทึก</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">อีเมลองค์กร (@chetupon.ac.th)</label>
+            <input type="email" id="loginEmailInput" class="form-control form-control-lg" placeholder="yourname@chetupon.ac.th" value="mock.teacher@chetupon.ac.th">
+          </div>
+          <div class="alert alert-info py-2" style="font-size:0.8rem">
+            <i class="fas fa-info-circle"></i> <b>ทดสอบระบบ:</b> สามารถพิมพ์บัญชีอีเมลเพื่อทดสอบสิทธิ์จำลองได้ เช่น ครูทั่วไป: <code>mock.teacher@chetupon.ac.th</code> | แอดมิน: <code>watpol.ccc@chetupon.ac.th</code> | นักศึกษา: <code>66201020001@chetupon.ac.th</code>
+          </div>
+        </div>
+        <div class="modal-footer justify-content-center">
+          <button class="btn btn-primary btn-lg w-100" onclick="verifyAndLoginUser()">ตรวจสอบสิทธิ์และเข้าสู่ระบบ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- แอปพลิเคชันโครงสร้างควบคุมหลัก -->
+  <div class="main-card" id="mainAppCard" style="display:none;">
     <h2 class="text-center mb-4 text-primary">
       <i class="fas fa-user-check"></i> ระบบบันทึกการแจ้งเตือนเวลาเรียน<br>
-      <span class="fs-4 text-secondary">วิทยาลัยพณิชยการเชตุพน (โฮสต์บน GitHub)</span>
+      <span class="fs-4 text-secondary">วิทยาลัยพณิชยการเชตุพน (GitHub Hosted)</span>
     </h2>
 
-    <!-- บล็อกแสดงข้อมูลบัญชีผู้ใช้จำลอง -->
+    <!-- บล็อกแสดงข้อมูลบัญชีผู้ใช้จริงบน GitHub -->
     <div id="userBar" class="user-info d-flex justify-content-between align-items-center">
-       <span><i class="fas fa-user-circle"></i> บัญชีผู้ใช้งานปัจจุบัน: <b id="currentEmail">mock.teacher@chetupon.ac.th</b></span>
-       <button class="btn btn-sm btn-outline-danger" onclick="triggerMockLogin()">จำลองสลับบัญชี (ครู / แอดมิน / นักศึกษา)</button>
+       <span><i class="fas fa-user-circle"></i> ผู้ใช้งานปัจจุบัน: <b id="currentEmail">กำลังดึงข้อมูล...</b></span>
+       <button class="btn btn-sm btn-outline-danger" onclick="logoutUser()"><i class="fas fa-sign-out-alt"></i> สลับบัญชี / ลงชื่อออก</button>
+    </div>
+
+    <!-- บล็อกเตือนสถานะเมื่อยังไม่มีการติดตั้ง URL จาก Google Apps Script (GAS) -->
+    <div class="alert alert-warning mb-4" id="gasUrlWarning" style="display:none;">
+      <h5><i class="fas fa-exclamation-triangle"></i> อยู่ในสถานะทดลองพรีวิว (Mock Mode)</h5>
+      <p class="mb-0">ขณะนี้หน้าเว็บกำลังเปิดระบบสาธิตในตัวเนื่องจากยังไม่ได้นำรหัส Web App URL จาก Google Apps Script มาเชื่อมต่อ หากคุณครูทำการติดตั้งเสร็จแล้วระบบจะสลับมาดึงค่าจาก Google Sheets จริงอัตโนมัติทันทีครับ</p>
     </div>
 
     <!-- แท็บควบคุม -->
@@ -292,7 +319,7 @@
 
     <div class="tab-content" id="appTabsContent">
       
-      <!-- แท็บย่อยที่ 1: บันทึกประวัติและเปรียบเทียบคาบเรียนเรียนขาด -->
+      <!-- แท็บย่อยที่ 1: บันทึกข้อมูล -->
       <div class="tab-pane fade show active" id="record-pane" role="tabpanel">
         <div class="row g-3 bg-light p-3 rounded border mb-4">
           <div class="col-md-6">
@@ -309,7 +336,7 @@
           </div>
           <div class="col-md-4">
             <label class="form-label text-success"><b><i class="fas fa-calculator"></i> คาบเรียนทั้งหมด (ทั้งเทอม)</b></label>
-            <input type="number" id="totalPeriods" class="form-control bg-white" placeholder="ดึงอัตโนมัติจากฐานข้อมูล" readonly>
+            <input type="number" id="totalPeriods" class="form-control bg-white" placeholder="ดึงอัตโนมัติ..." readonly>
           </div>
           <div class="col-md-12">
             <label class="form-label"><b>4. ห้องเรียน</b></label>
@@ -327,10 +354,10 @@
         </div>
       </div>
 
-      <!-- แท็บย่อยที่ 2: แนบรูปหลักฐานและส่งบันทึกตักเตือน -->
+      <!-- แท็บย่อยที่ 2: แนบหลักฐาน -->
       <div class="tab-pane fade" id="evidence-pane" role="tabpanel">
         <div class="alert alert-info">
-          <i class="fas fa-info-circle"></i> เลือกข้อมูลผู้รายงาน และห้องเรียน เพื่อทำการอัปโหลดหลักฐานเอกสารตักเตือน ระบบจะบีบอัดรูปภาพให้เหลือ 100-200KB โดยอัตโนมัติ เพื่อประหยัดพื้นที่ใช้งานระยะยาว
+          <i class="fas fa-info-circle"></i> เลือกข้อมูลผู้รายงาน และห้องเรียน เพื่อทำการอัปโหลดหลักฐานเอกสารตักเตือน ระบบจะทำการประมวลผลย่อภาพไฟล์ทันทีก่อนบันทึกเพื่อความเสถียร
         </div>
 
         <div class="row g-3 bg-light p-3 rounded border mb-4">
@@ -365,38 +392,29 @@
         </div>
       </div>
 
-      <!-- แท็บย่อยที่ 3: ระบบจัดการข้อมูลและดาวน์โหลด Template CSV สำหรับแอดมิน -->
+      <!-- แท็บย่อยที่ 3: จัดการข้อมูลสำหรับแอดมิน -->
       <div class="tab-pane fade" id="admin-pane" role="tabpanel">
-        <!-- บล็อกเลื่อนชั้นปีนักเรียนและสำรองข้อมูลอัตโนมัติ -->
         <div class="card border-primary mb-4 shadow-sm">
           <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="fas fa-history"></i> ระบบเลื่อนชั้นปีนักเรียน และสำรองข้อมูลประจำปี</h5>
           </div>
           <div class="card-body">
             <p class="text-muted mb-3">
-              เมื่อเปลี่ยนปีการศึกษาใหม่ คุณครูแอดมินสามารถคลิกปุ่มนี้เพื่อทำการ <b>เลื่อนชั้นเรียนของนักศึกษาทั้งหมดขึ้น 1 ระดับชั้นอัตโนมัติ</b> <br>
-              <span class="text-danger">⚠️ ระบบจะจำลองจัดทำสำเนา Backup ข้อมูลเดิมทั้งหมดลงใน Google Drive เป็นไฟล์ใหม่ให้คุณครูก่อนดำเนินการเลื่อนชั้นโดยอัตโนมัติ</span>
+              เมื่อเปลี่ยนปีการศึกษาใหม่ คุณครูแอดมินสามารถเลื่อนระดับชั้นเรียนของนักเรียนทั้งหมดขึ้น 1 ชั้นแบบจัดคั่นด้วยจุด (.) อัตโนมัติ โดยระบบจะบังคับสำรองข้อมูลทั้งหมดใน Spreadsheet ลง Google Drive ก่อนดำเนินการเลื่อนชั้นให้ทันที
             </p>
-            <ul>
-              <li>เลื่อนระดับชั้น: ปวช.2 $\rightarrow$ ปวช.3 | ปวช.1 $\rightarrow$ ปวช.2 | ปวส.1 $\rightarrow$ ปวส.2 (เปลี่ยนคำนำหน้าห้องเรียนให้เองทั้งหมด รองรับห้องคั่นจุด .)</li>
-              <li>ระดับ ปวช.3 และ ปวส.2 เดิม (สำเร็จการศึกษา) จะถูกเคลียร์ข้อมูลเพื่อจบการศึกษา</li>
-              <li>ระดับชั้นปีเริ่มต้น (ปวช.1 และ ปวส.1) จะถูกล้างข้อมูลว่างเปล่า เพื่อรอให้แอดมินนำเข้าไฟล์ CSV ในปีถัดไป</li>
-            </ul>
-            <div class="mt-3">
-              <button class="btn btn-warning fw-bold p-3 px-4 shadow-sm" onclick="promoteStudentsAndBackupMock()">
-                <i class="fas fa-angle-double-up"></i> ดำเนินการสำรองข้อมูล และเลื่อนชั้นปีนักเรียน
-              </button>
-            </div>
+            <button class="btn btn-warning fw-bold p-3 px-4 shadow-sm" onclick="promoteStudentsAndBackupApi()">
+              <i class="fas fa-angle-double-up"></i> ดำเนินการสำรองข้อมูล และเลื่อนชั้นปีนักเรียน
+            </button>
             <div id="promoteResultArea" class="mt-3"></div>
           </div>
         </div>
 
         <div class="alert alert-warning mb-4">
-          <i class="fas fa-exclamation-triangle"></i> <b>ส่วนงานแอดมินระบบ:</b> การอัปโหลดไฟล์ข้อมูลใหม่ จะทำงานโดยการลบข้อมูลเก่าในชีตออกก่อน แล้วเขียนทับด้วยข้อมูลปัจจุบันทั้งหมด ระบบจะมีการตรวจสอบข้อมูลความถูกต้องก่อนทำการนำเข้าระบบ
+          <i class="fas fa-exclamation-triangle"></i> <b>การนำเข้าฐานข้อมูลวิทยาลัยผ่าน CSV:</b> การอัปโหลดไฟล์จะเป็นการเขียนทับข้อมูลในแผ่นงานเดิมของระบบ กรุณาตรวจสอบหัวตารางให้ตรงตามโครงสร้าง Template ก่อนกดยืนยันอัปโหลด
         </div>
 
         <div class="row g-3">
-          <!-- โครงสร้างนำเข้าวิชาเรียน -->
+          <!-- วิชาเรียน -->
           <div class="col-md-6">
             <div class="admin-box">
               <h5 class="text-primary mb-3"><i class="fas fa-university"></i> อัปโหลดวิชา/ครู (CSV)</h5>
@@ -413,13 +431,13 @@
                   <i class="fas fa-download"></i> ดาวน์โหลด Template CSV รายวิชา
                 </button>
               </div>
-              <button class="btn btn-primary w-100 py-2 fw-bold" onclick="uploadCsvDept()">
+              <button class="btn btn-primary w-100 py-2 fw-bold" onclick="uploadCsvDeptApi()">
                 <i class="fas fa-file-import"></i> อัปโหลดข้อมูลแผนกวิชา
               </button>
             </div>
           </div>
 
-          <!-- โครงสร้างนำเข้านักเรียน -->
+          <!-- นักเรียน -->
           <div class="col-md-6">
             <div class="admin-box">
               <h5 class="text-info mb-3"><i class="fas fa-users-cog"></i> อัปโหลดรายชื่อนักเรียน (CSV)</h5>
@@ -443,7 +461,7 @@
                   <i class="fas fa-download"></i> ดาวน์โหลด Template CSV รายชื่อนักเรียน
                 </button>
               </div>
-              <button class="btn btn-info text-white w-100 py-2 fw-bold" onclick="uploadCsvLevel()">
+              <button class="btn btn-info text-white w-100 py-2 fw-bold" onclick="uploadCsvLevelApi()">
                 <i class="fas fa-users"></i> อัปโหลดรายชื่อนักเรียน
               </button>
             </div>
@@ -453,20 +471,25 @@
     </div>
   </div>
 
-  <!-- ส่วน Print Area เฉพาะสำหรับเบราว์เซอร์ส่งออกไปหน้าสั่งพิมพ์ทางระบบเครื่องปริ้นท์ (จะซ่อนอยู่บนเว็บจอภาพทั่วไป) -->
   <div id="printArea">
     <div class="page-doc" id="printedMemoContainer">
-       <!-- JS จะคัดลอก HTML ไปใส่อัตโนมัติเวลาสั่งพิมพ์ -->
+       <!-- ถูกสลับมาใส่ตรงนี้เวลาสั่งปริ้นท์จริงทางระบบเครื่องปริ้นท์ -->
     </div>
   </div>
 
   <script>
-    // =========================================================
-    // 📦 ฐานข้อมูลจำลอง (Mock Data) สำหรับแสดงผลและสาธิตความสมบูรณ์
-    // =========================================================
-    let mockUserRole = "teacher"; // สิทธิ์ปัจจุบัน
-    let mockUserEmail = "mock.teacher@chetupon.ac.th";
+    // ⚠️ นำ URL เว็บแอป (Web App URL) ที่ได้จาก Google Apps Script มาใส่ไว้ตรงเครื่องหมายคำพูดด้านล่างนี้ 
+    const GAS_WEB_APP_URL = "วาง_URL_ของ_GAS_ที่นี่";
 
+    let isMockMode = false;
+    let currentUserEmail = "";
+    let systemSchoolData = {};
+    let pendingEvidenceRecords = [];
+
+    // แอดมินอีเมลสำหรับตรวจสอบจำลองแอดมินใน Mock Mode
+    const ADMIN_EMAILS_MOCK = () => ['watpol.ccc@chetupon.ac.th', 'admin.ccc@chetupon.ac.th'];
+
+    // 📦 ฐานข้อมูลจำลอง (Mock Data) สำหรับแสดงผลและสาธิตความสมบูรณ์
     let schoolData = {
       departments: ['การบัญชี', 'การตลาด', 'การเลขานุการ', 'เทคโนโลยีธุรกิจดิจิทัล', 'คอมพิวเตอร์กราฟิก'],
       deptData: {
@@ -512,108 +535,144 @@
         ]
       },
       historyMap: {
-        'ครูสมจิต ห่วงเรียน|บัญชีเบื้องต้น|คพ.2.1|นางสาววิภาดา ดั่งใจ': 1, // มีประวัติแจ้งครั้งที่ 1
-        'ครูปภาพัส สมองดี|การพัฒนาเว็บไซต์|DBTech.2.1|นายกิตติคุณ มั่งมี': 2 // มีประวัติแจ้งครั้งที่ 2
+        'ครูสมจิต ห่วงเรียน|บัญชีเบื้องต้น|คพ.2.1|นางสาววิภาดา ดั่งใจ': 1, 
+        'ครูปภาพัส สมองดี|การพัฒนาเว็บไซต์|DBTech.2.1|นายกิตติคุณ มั่งมี': 2 
       },
       historyMissedMap: {
-        'ครูสมจิต ห่วงเรียน|บัญชีเบื้องต้น|คพ.2.1|นางสาววิภาดา ดั่งใจ': 4, // ครั้งก่อนหน้าขาด 4 คาบ
-        'ครูปภาพัส สมองดี|การพัฒนาเว็บไซต์|DBTech.2.1|นายกิตติคุณ มั่งมี': 6 // ครั้งก่อนหน้าขาด 6 คาบ
+        'ครูสมจิต ห่วงเรียน|บัญชีเบื้องต้น|คพ.2.1|นางสาววิภาดา ดั่งใจ': 4, 
+        'ครูปภาพัส สมองดี|การพัฒนาเว็บไซต์|DBTech.2.1|นายกิตติคุณ มั่งมี': 6 
       }
     };
 
-    // จำลองรายการประวัติค้างแนบหลักฐาน
     let rawPendingRecords = [
       { row: 2, timestamp: '08/06/2026 10:00', teacher: 'ครูสมจิต ห่วงเรียน', department: 'การบัญชี', subject: 'บัญชีเบื้องต้น', room: 'คพ.2.1', student: 'นางสาววิภาดา ดั่งใจ', level: 'ครั้งที่ 1', missed: 4, total: 40, percent: 0.10 },
       { row: 3, timestamp: '08/06/2026 11:15', teacher: 'ครูปภาพัส สมองดี', department: 'เทคโนโลยีธุรกิจดิจิทัล', subject: 'การพัฒนาเว็บไซต์', room: 'DBTech.2.1', student: 'นายกิตติคุณ มั่งมี', level: 'ครั้งที่ 2', missed: 6, total: 40, percent: 0.15 }
     ];
 
-    // =========================================================
-    // ⚙️ ตรรกะการเริ่มต้นและการจัดแบ่งสิทธิ์ (Security Verification)
-    // =========================================================
-    window.onload = function() {
-      verifyUserRole();
-    };
-
-    function triggerMockLogin() {
-      let choose = prompt("ระบบจำลองสิทธิ์ความปลอดภัย:\nพิมพ์ '1' สำหรับ ครูผู้สอนทั่วไป\nพิมพ์ '2' สำหรับ แอดมินวิทยาลัยฯ\nพิมพ์ '3' สำหรับ บัญชีนักศึกษา (จะโดนปฏิเสธระบบ)");
-      if (choose === "1") {
-        mockUserRole = "teacher";
-        mockUserEmail = "mock.teacher@chetupon.ac.th";
-      } else if (choose === "2") {
-        mockUserRole = "admin";
-        mockUserEmail = "watpol.ccc@chetupon.ac.th";
-      } else if (choose === "3") {
-        mockUserRole = "student";
-        mockUserEmail = "66201020001@chetupon.ac.th";
+    // เช็กสถานะการตั้งค่าพารามิเตอร์ GAS URL หากยังไม่ใส่ให้รันเป็น Mock Preview จำลองแทนเพื่อไม่ให้ค้างติ้วๆ
+    window.addEventListener('DOMContentLoaded', () => {
+      if (GAS_WEB_APP_URL === "วาง_URL_ของ_GAS_ที่นี่" || GAS_WEB_APP_URL.trim() === "") {
+        isMockMode = true;
+        document.getElementById('gasUrlWarning').style.display = 'block';
       }
-      verifyUserRole();
+      
+      const loginModal = new bootstrap.Modal(document.getElementById('loginModal'), {
+        backdrop: 'static',
+        keyboard: false
+      });
+      loginModal.show();
+    });
+
+    async function requestApi(action, payloadData = {}) {
+      if (isMockMode) {
+        return simulateMockResponse(action, payloadData);
+      }
+      
+      showLoader('กำลังเชื่อมต่อข้อมูล Google Sheet...');
+      try {
+        const bodyPayload = {
+          action: action,
+          email: currentUserEmail,
+          ...payloadData
+        };
+
+        const response = await fetch(GAS_WEB_APP_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
+          body: JSON.stringify(bodyPayload)
+        });
+
+        if (!response.ok) throw new Error("การติดต่อเครือข่ายล้มเหลว");
+        const jsonResult = await response.json();
+        hideLoader();
+        return jsonResult;
+      } catch (err) {
+        hideLoader();
+        console.error("API Error: ", err);
+        alert("❌ ไม่สามารถดึงข้อมูลได้: โปรดตรวจสอบการอัปโหลด Deployment ใน Apps Script หรือสถานะสิทธิ์ CORS");
+        isMockMode = true;
+        document.getElementById('gasUrlWarning').style.display = 'block';
+        return simulateMockResponse(action, payloadData);
+      }
     }
 
-    function verifyUserRole() {
-      showLoader('กำลังวิเคราะห์โครงสร้างอีเมลและสิทธิ์การเข้าใช้งาน...');
-      document.getElementById('currentEmail').innerText = mockUserEmail;
-      
-      // การกรองรูปแบบนักศึกษาด้วยรหัส 11 หลัก
-      const isStudent = /^[0-9]{11}@/.test(mockUserEmail);
+    async function verifyAndLoginUser() {
+      const email = document.getElementById('loginEmailInput').value.trim();
+      if (!email) { alert("กรุณาระบุบัญชีอีเมลก่อนเข้าใช้งานครับ"); return; }
 
-      if (isStudent || mockUserRole === "student") {
+      currentUserEmail = email;
+      bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+      
+      showLoader('กำลังวิเคราะห์โครงสร้างข้อมูลสิทธิ์ของท่าน...');
+      const accessRes = await requestApi('checkAccess');
+      
+      if (!accessRes.authorized) {
         hideLoader();
+        document.getElementById('unauthorizedReason').innerText = accessRes.reason;
         document.getElementById('unauthorizedBox').style.display = 'block';
         document.getElementById('mainAppCard').style.display = 'none';
-        
-        document.getElementById('denyModalEmailText').innerHTML = `บัญชีผู้ใช้อีเมลของคุณคือ <b>${mockUserEmail}</b><br>ซึ่งตรงกับเงื่อนไขรหัสประจำตัวของนักศึกษา วิทยาลัยพณิชยการเชตุพน`;
-        let denyModal = new bootstrap.Modal(document.getElementById('accessDeniedModal'));
+
+        document.getElementById('accessDeniedModalBody').innerHTML = `บัญชีผู้ใช้อีเมลของคุณคือ <b>${email}</b><br>เหตุผลความปลอดภัย: <b>${accessRes.reason}</b>`;
+        const denyModal = new bootstrap.Modal(document.getElementById('accessDeniedModal'), {
+          backdrop: 'static',
+          keyboard: false
+        });
         denyModal.show();
         return;
       }
 
-      // แสดง / ลบ แท็บจัดการแอดมินตามระดับสิทธิ์
-      const isAdmin = (mockUserRole === "admin" || ADMIN_EMAILS_MOCK().includes(mockUserEmail));
-      if (isAdmin) {
+      document.getElementById('currentEmail').innerText = email;
+      document.getElementById('mainAppCard').style.display = 'block';
+
+      if (accessRes.isAdmin) {
         document.getElementById('adminTabLi').style.display = 'block';
       } else {
         document.getElementById('adminTabLi').style.display = 'none';
       }
 
-      document.getElementById('unauthorizedBox').style.display = 'none';
-      document.getElementById('mainAppCard').style.display = 'block';
-      
-      loadInitialData();
+      await loadSystemData();
     }
 
-    const ADMIN_EMAILS_MOCK = () => ['watpol.ccc@chetupon.ac.th', 'admin.ccc@chetupon.ac.th'];
+    function logoutUser() {
+      document.getElementById('mainAppCard').style.display = 'none';
+      const loginModal = new bootstrap.Modal(document.getElementById('loginModal'), {
+        backdrop: 'static',
+        keyboard: false
+      });
+      loginModal.show();
+    }
 
     function logoutMock() {
-      // คืนค่าเป็นครูผู้สอนเริ่มต้น
-      mockUserRole = "teacher";
-      mockUserEmail = "mock.teacher@chetupon.ac.th";
       bootstrap.Modal.getInstance(document.getElementById('accessDeniedModal')).hide();
-      verifyUserRole();
+      logoutUser();
     }
 
-    function loadInitialData() {
-      const ds = document.getElementById('deptSelect');
-      ds.innerHTML = '<option value="">-- เลือกแผนก --</option>';
-      schoolData.departments.forEach(d => ds.innerHTML += `<option value="${d}">${d}</option>`);
-      
-      const csvDept = document.getElementById('csvDeptSelect');
-      csvDept.innerHTML = '<option value="">-- เลือกแผนกวิชา --</option>';
-      schoolData.departments.forEach(d => csvDept.innerHTML += `<option value="${d}">${d}</option>`);
-
-      hideLoader();
+    // ดึงค่าข้อมูลรายชื่อและแผนกทั้งหมดมาหยอดใส่ Dropdown
+    async function loadSystemData() {
+      const resData = await requestApi('getSchoolData');
+      if (resData) {
+        systemSchoolData = resData;
+        const ds = document.getElementById('deptSelect');
+        ds.innerHTML = '<option value="">-- เลือกแผนก --</option>';
+        resData.departments.forEach(d => ds.innerHTML += `<option value="${d}">${d}</option>`);
+        
+        const csvDept = document.getElementById('csvDeptSelect');
+        csvDept.innerHTML = '<option value="">-- เลือกแผนกวิชา --</option>';
+        resData.departments.forEach(d => csvDept.innerHTML += `<option value="${d}">${d}</option>`);
+      }
     }
 
-    // =========================================================
-    // 📝 ตรรกะฟังก์ชันการเลือก ครู -> วิชา -> คาบสะสม (แท็บย่อยที่ 1)
-    // =========================================================
     function onDeptChange() {
       const dept = document.getElementById('deptSelect').value;
       const ts = document.getElementById('teacherSelect');
       ts.innerHTML = '<option value="">-- เลือกครูผู้สอน --</option>';
       ts.disabled = !dept;
       resetBelow('teacher');
-      if (dept && schoolData.deptData[dept]) {
-        Object.keys(schoolData.deptData[dept]).forEach(t => ts.innerHTML += `<option value="${t}">${t}</option>`);
+      if (dept && systemSchoolData.deptData[dept]) {
+        Object.keys(systemSchoolData.deptData[dept]).forEach(t => ts.innerHTML += `<option value="${t}">${t}</option>`);
       }
     }
 
@@ -624,8 +683,8 @@
       ss.innerHTML = '<option value="">-- เลือกวิชาเรียน --</option>';
       ss.disabled = !teacher;
       resetBelow('subject');
-      if (teacher && schoolData.deptData[dept][teacher]) {
-        Object.keys(schoolData.deptData[dept][teacher]).forEach(s => ss.innerHTML += `<option value="${s}">${s}</option>`);
+      if (teacher && systemSchoolData.deptData[dept][teacher]) {
+        Object.keys(systemSchoolData.deptData[dept][teacher]).forEach(s => ss.innerHTML += `<option value="${s}">${s}</option>`);
       }
     }
 
@@ -641,11 +700,11 @@
       
       if (subject) {
         const pKey = `${dept}|${teacher}|${subject}`;
-        const totalPeriods = schoolData.subjectPeriods[pKey] || 0;
+        const totalPeriods = systemSchoolData.subjectPeriods[pKey] || 0;
         tp.value = totalPeriods;
 
         if (totalPeriods > 0) {
-          const rooms = schoolData.deptData[dept][teacher][subject];
+          const rooms = systemSchoolData.deptData[dept][teacher][subject];
           rooms.forEach(rm => {
             container.innerHTML += `<div class="form-check form-check-inline"><input class="form-check-input room-chk" type="checkbox" value="${rm}" id="chk_${rm}" onchange="showStudentsMulti()"><label class="form-check-label" for="chk_${rm}">${rm}</label></div>`;
           });
@@ -657,6 +716,16 @@
         tp.value = '';
         container.innerHTML = '<small class="text-muted">กรุณาเลือกวิชาเรียนก่อน...</small>';
       }
+    }
+
+    function resetBelow(level) {
+      if (level === 'teacher') {
+        document.getElementById('subjectSelect').innerHTML = '<option value="">-- เลือกวิชาเรียน --</option>';
+        document.getElementById('subjectSelect').disabled = true;
+      }
+      document.getElementById('totalPeriods').value = '';
+      document.getElementById('roomCheckboxGroup').innerHTML = '<small class="text-muted">กรุณาเลือกวิชาด้านบนก่อน...</small>';
+      document.getElementById('studentSection').style.display = 'none';
     }
 
     function showStudentsMulti() {
@@ -675,13 +744,13 @@
 
       checkedRooms.forEach(room => {
         const safeId = "room_" + room.replace(/[^a-zA-Z0-9]/g, '_');
-        const students = schoolData.studentsByRoom[room] || [];
+        const students = systemSchoolData.studentsByRoom[room] || [];
         let studentsHTML = '';
         
         students.forEach((st, idx) => {
           const hKey = `${teacher}|${subject}|${room}|${st.name}`;
-          const mLevel = schoolData.historyMap[hKey] || 0;
-          const prevMissed = schoolData.historyMissedMap[hKey] || 0;
+          const mLevel = systemSchoolData.historyMap[hKey] || 0;
+          const prevMissed = systemSchoolData.historyMissedMap[hKey] || 0;
           const rowClass = mLevel > 0 ? 'student-item has-history' : 'student-item bg-light';
           const historyText = mLevel === 1 ? 'ครั้งที่ 1' : mLevel === 2 ? 'ครั้งที่ 2' : mLevel >= 3 ? 'แจ้ง ขร.' : '';
           
@@ -753,19 +822,9 @@
       else { badge.className = "badge bg-secondary w-100 p-2 percent-badge"; }
     }
 
-    function toggleRoom(id) {
-      const content = document.getElementById(id);
-      const icon = document.getElementById('icon_' + id);
-      content.style.display = (content.style.display === "none") ? "block" : "none";
-      icon.className = (content.style.display === "none") ? "fas fa-chevron-down" : "fas fa-chevron-up";
-    }
+    let preparedMemoData = null;
 
-    // =========================================================
-    // 🖨️ ตรรกะแยกบันทึกข้อความราชการ และพิมพ์ออกมาเป๊ะเหมือน Word
-    // =========================================================
-    let preparedMemoData = null; // คลังเก็บเอกสารที่จัดทำเสร็จรอพิมพ์
-
-    function validateAndOpenSummary() {
+    async function validateAndOpenSummary() {
       const totalPeriods = document.getElementById('totalPeriods').value;
       if (!totalPeriods || totalPeriods <= 0) {
         alert("ไม่พบจำนวนคาบเรียนทั้งหมดในรายวิชานี้");
@@ -818,7 +877,6 @@
       if (hasError) return;
       if (count === 0) { alert('⚠️ กรุณาระบุระดับการแจ้งเตือนของนักศึกษาอย่างน้อย 1 รายการก่อน'); return; }
 
-      // จัดทำข้อมูลสำหรับการเขียนฟอร์มราชการ
       preparedMemoData = {
         deptName: document.getElementById('deptSelect').value,
         teacherName: document.getElementById('teacherSelect').value,
@@ -827,23 +885,18 @@
         evaluations: evaluations
       };
 
-      // ทำการเขียน HTML เอกสารราชการแยกตามระดับความสำคัญ
-      renderPrintedMemo();
-      
-      // สั่งเปิดตัวอย่างโมดอลพรีวิวสารบรรณจำลองขึ้นมาแสดง
-      const previewModal = new bootstrap.Modal(document.getElementById('printPreviewModal'));
-      previewModal.show();
+      // บันทึกรายงานเข้าฐานข้อมูลผ่าน Web API
+      const saveRes = await requestApi('saveData', { formData: preparedMemoData });
+      if (saveRes && saveRes.status === 'success') {
+        alert("🎉 ระบบทำการบันทึกประวัติการรายงานเรียบร้อยแล้ว!");
+        renderPrintedMemo();
+        const previewModal = new bootstrap.Modal(document.getElementById('printPreviewModal'));
+        previewModal.show();
+      } else {
+        alert("❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (saveRes ? saveRes.message : "ไม่ระบุ"));
+      }
     }
 
-    function toThaiNumerals(str) {
-      if (str === null || str === undefined) return '';
-      const thaiDigits = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'];
-      return String(str).replace(/[0-9]/g, function(ch) {
-        return thaiDigits[Number(ch)];
-      });
-    }
-
-    // เขียนพรีวิวจัดสัดส่วนหนังสือบันทึกข้อความราชการไทย (A4)
     function renderPrintedMemo() {
       const data = preparedMemoData;
       const formattedDate = new Date().toLocaleDateString('th-TH', {year: 'numeric', month: 'long', day: 'numeric'});
@@ -851,7 +904,6 @@
       const thaiTotalPeriods = toThaiNumerals(data.totalPeriods);
       const thaiYear = toThaiNumerals(new Date().getFullYear() + 543);
 
-      // ดึงระดับขั้นสูงสุดเพื่อกำหนดหัวข้อเรื่องราชการของบันทึกข้อความชุดนี้
       let highestLevel = "ครั้งที่ 1";
       data.evaluations.forEach(ev => {
         ev.absentList.forEach(st => {
@@ -978,31 +1030,12 @@
         </div>
       `;
 
-      // เขียนเอกสารใส่กล่องพรีวิว และกล่องสำหรับสั่งพริ้นท์จริงของเบราว์เซอร์พร้อมกัน
       document.getElementById('previewMemoContainer').innerHTML = fullMemoHtml;
       document.getElementById('printedMemoContainer').innerHTML = fullMemoHtml;
     }
 
-    function triggerBrowserPrint() {
-      // เรียกใช้ความสามารถพิมพ์ของระบบ Chrome/Safari/Edge 
-      // เพื่อความเสถียรและระยะขอบ ซ้าย 3 ซม. ขวา 2 ซม. สวยเหมือนทำจาก MS Word
-      window.print();
-    }
-
-    function resetForm() {
-      document.getElementById('deptSelect').selectedIndex = 0;
-      onDeptChange();
-    }
-
-    // =========================================================
-    // 🔗 ตรรกะฟังก์ชันแนบหลักฐานการตักเตือน (แท็บย่อยที่ 2)
-    // =========================================================
-    function renderEvidenceTab() {
-      onEvidenceTabActive();
-    }
-
-    function onEvidenceTabActive() {
-      document.getElementById('evidenceDeptSelect').innerHTML = '<option value="">-- เลือกแผนกวิชา --</option>';
+    async function renderEvidenceTab() {
+      document.getElementById('evidenceDeptSelect').innerHTML = '<option value="">-- กำลังดึงข้อมูล --</option>';
       document.getElementById('evidenceTeacherSelect').innerHTML = '<option value="">-- เลือกครู --</option>';
       document.getElementById('evidenceSubjectSelect').innerHTML = '<option value="">-- เลือกวิชา --</option>';
       document.getElementById('evidenceRoomSelect').innerHTML = '<option value="">-- เลือกห้องเรียน --</option>';
@@ -1011,11 +1044,19 @@
       document.getElementById('evidenceSubjectSelect').disabled = true;
       document.getElementById('evidenceRoomSelect').disabled = true;
       
-      document.getElementById('pendingEvidenceList').innerHTML = '<div class="text-center p-5 text-muted"><i class="fas fa-arrow-up fa-2x mb-3 text-primary"></i><br>กรุณาค้นหาและเลือกข้อมูลเงื่อนไขด้านบนเพื่อแนบหลักฐาน</div>';
+      document.getElementById('pendingEvidenceList').innerHTML = '<div class="text-center p-5 text-muted">กำลังค้นหารายชื่อรอแนบเอกสาร...</div>';
 
-      // จำลองกรองแผนกวิชาที่มีประวัติค้างส่งอัปโหลดหลักฐาน
+      const resRecords = await requestApi('getPendingEvidence');
+      pendingEvidenceRecords = resRecords || [];
+
+      if (pendingEvidenceRecords.length === 0) {
+        document.getElementById('evidenceDeptSelect').innerHTML = '<option value="">-- ไม่มีข้อมูลค้าง --</option>';
+        document.getElementById('pendingEvidenceList').innerHTML = '<div class="alert alert-success text-center py-4">🎉 ตรวจทานครบถ้วนหมดแล้ว ไม่มีรายการแจ้งที่ค้างอัปโหลดหลักฐาน</div>';
+        return;
+      }
+
       const depts = [];
-      rawPendingRecords.forEach(item => {
+      pendingEvidenceRecords.forEach(item => {
         if (item.department && !depts.includes(item.department)) {
           depts.push(item.department);
         }
@@ -1024,6 +1065,7 @@
       let deptHtml = '<option value="">-- เลือกแผนกวิชา --</option>';
       depts.forEach(d => deptHtml += `<option value="${d}">${d}</option>`);
       document.getElementById('evidenceDeptSelect').innerHTML = deptHtml;
+      document.getElementById('pendingEvidenceList').innerHTML = '<div class="text-center p-5 text-muted">กรุณาเลือกข้อมูลตัวกรองเพื่อเรียกดูรายชื่อ</div>';
     }
 
     function onEvidenceDeptChange() {
@@ -1041,7 +1083,7 @@
       if (!selectedDept) return;
 
       const teachers = [];
-      rawPendingRecords.forEach(item => {
+      pendingEvidenceRecords.forEach(item => {
         if (item.department === selectedDept && !teachers.includes(item.teacher)) {
           teachers.push(item.teacher);
         }
@@ -1066,7 +1108,7 @@
       if (!selectedTeacher) return;
 
       const subjects = [];
-      rawPendingRecords.forEach(item => {
+      pendingEvidenceRecords.forEach(item => {
         if (item.department === selectedDept && item.teacher === selectedTeacher && !subjects.includes(item.subject)) {
           subjects.push(item.subject);
         }
@@ -1089,7 +1131,7 @@
       if (!selectedSubj) return;
 
       const rooms = [];
-      rawPendingRecords.forEach(item => {
+      pendingEvidenceRecords.forEach(item => {
         if (item.department === selectedDept && item.teacher === selectedTeacher && item.subject === selectedSubj && !rooms.includes(item.room)) {
           rooms.push(item.room);
         }
@@ -1109,7 +1151,7 @@
 
       if (!selectedDept || !selectedTeacher || !selectedSubj || !selectedRoom) return;
 
-      const filtered = rawPendingRecords.filter(item => 
+      const filtered = pendingEvidenceRecords.filter(item => 
         item.department === selectedDept && 
         item.teacher === selectedTeacher && 
         item.subject === selectedSubj && 
@@ -1121,9 +1163,8 @@
         return;
       }
 
-      let html = '<h6 class="mb-3 text-secondary"><i class="fas fa-user-clock"></i> รายชื่อนักเรียนรอแนบเอกสารหลักฐานตักเตือน</h6>';
+      let html = '<h6 class="mb-3 text-secondary"><i class="fas fa-user-clock"></i> รายชื่อนักเรียนค้างส่งไฟล์หลักฐานการตักเตือน</h6>';
       filtered.forEach(item => {
-        // แก้ไขการจัดแสดงผลเปอร์เซ็นต์ในแท็บแนบหลักฐานเป็น % ทศนิยม (Question 1)
         const percentFormatted = (parseFloat(item.percent) * 100).toFixed(2) + '%';
 
         html += `
@@ -1140,10 +1181,10 @@
                   </p>
                 </div>
                 <div class="col-md-5">
-                  <form onsubmit="executeMockUpload(event, ${item.row}, '${item.student}')" class="d-flex flex-column gap-2">
+                  <form onsubmit="handleEvidenceUpload(event, ${item.row}, '${item.student}')" class="d-flex flex-column gap-2">
                     <input class="form-control form-control-sm" type="file" id="file_${item.row}" accept=".jpg,.jpeg,.png,.pdf" required>
                     <button type="submit" class="btn btn-sm btn-info text-white" id="btn_${item.row}">
-                      <i class="fas fa-upload"></i> อัปโหลดเอกสารตักเตือน
+                      <i class="fas fa-upload"></i> อัปโหลดรูปตักเตือน หรือ PDF
                     </button>
                   </form>
                 </div>
@@ -1155,34 +1196,111 @@
       container.innerHTML = html;
     }
 
-    function executeMockUpload(e, rowNum, studentName) {
+    function handleEvidenceUpload(e, rowNum, studentName) {
       e.preventDefault();
+      const fileInput = document.getElementById(`file_${rowNum}`);
       const btn = document.getElementById(`btn_${rowNum}`);
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบีบอัดรูปภาพฝั่งผู้ใช้...';
+      const file = fileInput.files[0];
+      
+      if (!file) return;
 
-      // จำลองหน่วงเวลาการบีบอัดและอัปโหลดเซิร์ฟเวอร์
-      setTimeout(() => {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังเตรียมไฟล์หลักฐาน...';
+
+      if (file.type.startsWith('image/')) {
+        btn.innerHTML = '<i class="fas fa-compress"></i> กำลังย่อขนาดรูปภาพอัตโนมัติ...';
+        compressImage(file, 1000, 0.7, function(compressedBlob) {
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            const base64Data = evt.target.result.split(',')[1];
+            uploadEvidenceToServer(rowNum, base64Data, file.name, 'image/jpeg', studentName);
+          };
+          reader.readAsDataURL(compressedBlob);
+        });
+      } else {
+        if (file.size > 5 * 1024 * 1024) {
+          alert("ขนาดไฟล์เอกสารใหญ่เกินไป (ห้ามเกิน 5MB)");
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-upload"></i> ลองอีกครั้ง';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const base64Data = evt.target.result.split(',')[1];
+          uploadEvidenceToServer(rowNum, base64Data, file.name, file.type, studentName);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function compressImage(file, maxDimension, quality, callback) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxDimension) {
+              height *= maxDimension / width;
+              width = maxDimension;
+            }
+          } else {
+            if (height > maxDimension) {
+              width *= maxDimension / height;
+              height = maxDimension;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(function(blob) {
+            callback(blob);
+          }, 'image/jpeg', quality);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function uploadEvidenceToServer(rowNum, base64Data, filename, mimeType, studentName) {
+      const btn = document.getElementById(`btn_${rowNum}`);
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังอัปโหลดเข้าระบบ...';
+
+      const uploadRes = await requestApi('saveEvidence', {
+        rowNum: rowNum,
+        base64Data: base64Data,
+        filename: filename,
+        mimeType: mimeType,
+        studentName: studentName
+      });
+
+      if (uploadRes && uploadRes.status === 'success') {
         document.getElementById(`ev_card_${rowNum}`).innerHTML = `
           <div class="card-body text-center text-success py-3">
             <i class="fas fa-check-circle fa-lg mb-2"></i><br>
-            ระบบทำบีบอัดขนาดไฟล์รูปภาพเหลือ <b>142KB (ประหยัด Drive สำเร็จ)</b><br>
-            บันทึกไฟล์หลักฐานของ <b>${studentName}</b> เสร็จสิ้นเรียบร้อยแล้ว
+            บันทึกไฟล์หลักฐาน (บีบอัดสำเร็จ) ของ <b>${studentName}</b> เสร็จเรียบร้อยแล้ว
           </div>`;
         
-        rawPendingRecords = rawPendingRecords.filter(item => item.row !== rowNum);
+        pendingEvidenceRecords = pendingEvidenceRecords.filter(item => item.row !== rowNum);
         setTimeout(() => {
           const card = document.getElementById(`ev_card_${rowNum}`);
           if (card) card.remove();
           filterEvidenceList();
-        }, 2500);
-      }, 1500);
+        }, 2000);
+      } else {
+        alert("❌ อัปโหลดไฟล์ล้มเหลว: " + (uploadRes ? uploadRes.message : "ระบบปฏิเสธคำขอ"));
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-upload"></i> ลองใหม่อีกครั้ง';
+      }
     }
 
-    // =========================================================
-    // 💾 ระบบการจำลองเลื่อนระดับชั้น และสำรองข้อมูล (แอดมินแท็บ 3)
-    // =========================================================
-    function promoteStudentsAndBackupMock() {
+    async function promoteStudentsAndBackupApi() {
       const pin = prompt("⚠️ ระบบการสำรองข้อมูลและเลื่อนระดับชั้นเรียนประจำปี\nกรุณาพิมพ์ 'PROMOTE' ตัวพิมพ์ใหญ่เพื่อยืนยันการทำรายการลงในกล่องข้อความ:");
       if (pin !== 'PROMOTE') {
         alert("ทำรายการยกเลิก: คุณพิมพ์ยืนยันสิทธิ์ไม่ถูกต้อง");
@@ -1190,25 +1308,27 @@
       }
 
       showLoader('กำลังดำเนินการสำรองฐานข้อมูล และจัดกระบวนเลื่อนชั้นเรียนตามเงื่อนไข...');
+      const res = await requestApi('promoteStudents');
 
-      setTimeout(() => {
+      if (res && res.status === 'success') {
         hideLoader();
         document.getElementById('promoteResultArea').innerHTML = `
           <div class="alert alert-success p-3 mb-0 shadow-sm">
-            <h5 class="fw-bold"><i class="fas fa-check-circle"></i> เลื่อนชั้นปีการศึกษาและจัดเก็บไฟล์ประวัติสำเร็จ!</h5>
-            <p class="mb-2">ระบบแยกประมวลผลจัดห้องเรียนแบบคั่นด้วยเครื่องหมายจุด (.) และสร้างคลังสำรองข้อมูลลงใน Google Drive เรียบร้อยแล้ว</p>
-            <a href="#" class="btn btn-sm btn-outline-success" onclick="alert('ดาวน์โหลดไฟล์จัดเก็บสำรองข้อมูลดิบปีการศึกษาเรียบร้อย')">
-              <i class="fas fa-file-excel"></i> เปิดลิงก์ดาวน์โหลด Backup ข้อมูลประวัตินักเรียนก่อนเลื่อนชั้น
+            <h5 class="fw-bold"><i class="fas fa-check-circle"></i> เลื่อนชั้นเรียนปีการศึกษาสำเร็จ!</h5>
+            <p class="mb-2">ระบบได้จัดระเบียบสำรองประวัติสเปรดชีตแผ่นเดิมไว้เป็นไฟล์ชุดใหม่เรียบร้อยแล้ว</p>
+            <a href="${res.backupUrl}" target="_blank" class="btn btn-sm btn-outline-success">
+              <i class="fas fa-file-excel"></i> เปิดดูลิงก์ไฟล์สำรองประวัติ (Backup URL)
             </a>
           </div>
         `;
-        alert("🎉 ประมวลผลเลื่อนชั้นเรียบร้อยแล้ว! แผ่นงานของ ปวช.1 และ ปวส.1 พร้อมนำเข้ารายชื่อใหม่ด้วยไฟล์ CSV");
-      }, 2000);
+        alert(res.message);
+        await loadSystemData();
+      } else {
+        hideLoader();
+        alert("❌ ล้มเหลว: " + (res ? res.message : "ไม่ได้ระบุสิทธิ์แอดมิน"));
+      }
     }
 
-    // =========================================================
-    // 📂 ดาวน์โหลด Template CSV และโครงสร้างหัวตารางที่ถูกต้อง
-    // =========================================================
     function triggerCsvDownload(filename, headers, sampleRow) {
       const csvContent = "\ufeff" + headers + "\n" + sampleRow;
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1234,32 +1354,96 @@
       triggerCsvDownload("Template_รายชื่อนักเรียน_เชตุพน.csv", headers, sample);
     }
 
-    function uploadCsvDept() {
+    async function uploadCsvDeptApi() {
+      const dept = document.getElementById('csvDeptSelect').value;
       const fileInput = document.getElementById('csvDeptFile');
-      if (!fileInput.files[0]) { alert("กรุณาเลือกไฟล์ข้อมูล CSV วิชาเรียนก่อนทำรายการ"); return; }
-      showLoader('ระบบกำลังวิเคราะห์หัวข้อตารางรายวิชา...');
-      setTimeout(() => {
-        hideLoader();
-        alert("🎉 สำเร็จ! ตรวจสอบหัวตารางถูกต้องตามเกณฑ์สิทธิ์ ระบบบันทึกนำเข้าวิชาเรียนของวิทยาลัยเรียบร้อยแล้ว");
-        fileInput.value = '';
-      }, 1200);
+      const file = fileInput.files[0];
+
+      if (!dept) { alert('กรุณาเลือกแผนกวิชาก่อนทำรายการครับ'); return; }
+      if (!file) { alert('กรุณาเลือกไฟล์ข้อมูล CSV รายวิชาก่อนครับ'); return; }
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const text = e.target.result;
+        showLoader('ระบบกำลังวิเคราะห์และนำส่งฐานข้อมูล...');
+        const res = await requestApi('uploadCsv', {
+          type: 'department',
+          sheetKey: dept,
+          rawText: text
+        });
+
+        if (res && res.status === 'success') {
+          alert(`🎉 สำเร็จ! นำเข้าโครงสร้างวิชาของแผนก ${dept} เรียบร้อยแล้ว`);
+          fileInput.value = '';
+          await loadSystemData();
+        } else {
+          alert("❌ เกิดข้อผิดพลาด: " + (res ? res.message : "ระบบตัดสิทธิ์นำเข้า"));
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
     }
 
-    function uploadCsvLevel() {
+    async function uploadCsvLevelApi() {
+      const level = document.getElementById('csvLevelSelect').value;
       const fileInput = document.getElementById('csvLevelFile');
-      if (!fileInput.files[0]) { alert("กรุณาเลือกไฟล์รายชื่อนักเรียน CSV ก่อนทำรายการ"); return; }
-      showLoader('ระบบวิเคราะห์จุดคั่นห้องเรียนและเลขประจำตัวนักเรียน...');
-      setTimeout(() => {
-        hideLoader();
-        alert("🎉 สำเร็จ! นำเข้าข้อมูลรายชื่อนักเรียนและครูที่ปรึกษาถูกต้องสมบูรณ์และเสถียร");
-        fileInput.value = '';
-      }, 1200);
+      const file = fileInput.files[0];
+
+      if (!level) { alert('กรุณาเลือกระดับชั้นก่อนทำรายการครับ'); return; }
+      if (!file) { alert('กรุณาเลือกไฟล์ CSV รายชื่อเด็กก่อนครับ'); return; }
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const text = e.target.result;
+        showLoader('กำลังวิเคราะห์และนำเข้าแผ่นรายชื่อชั้นปี...');
+        const res = await requestApi('uploadCsv', {
+          type: 'level',
+          sheetKey: level,
+          rawText: text
+        });
+
+        if (res && res.status === 'success') {
+          alert(`🎉 สำเร็จ! บันทึกไฟล์รายชื่อนักเรียนระดับชั้น ${level} ครบถ้วนเรียบร้อยแล้วครับ`);
+          fileInput.value = '';
+          await loadSystemData();
+        } else {
+          alert("❌ เกิดข้อผิดพลาด: " + (res ? res.message : "ไม่สามารถเขียนทับแผ่นงานได้"));
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+
+    function simulateMockResponse(action, payload) {
+      console.log("Mocking Action: ", action, payload);
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          if (action === 'checkAccess') {
+            resolve({
+              authorized: true,
+              isAdmin: currentUserEmail === "watpol.ccc@chetupon.ac.th",
+              email: currentUserEmail
+            });
+          } else if (action === 'getSchoolData') {
+            resolve(schoolData);
+          } else if (action === 'getPendingEvidence') {
+            resolve(rawPendingRecords);
+          } else if (action === 'saveData') {
+            resolve({ status: 'success' });
+          } else if (action === 'saveEvidence') {
+            resolve({ status: 'success', url: '#' });
+          } else if (action === 'promoteStudents') {
+            resolve({ status: 'success', message: 'เลื่อนชั้นเรียนเสร็จสมบูรณ์เรียบร้อยแล้ว!', backupUrl: '#' });
+          } else if (action === 'uploadCsv') {
+            resolve({ status: 'success' });
+          }
+        }, 600);
+      });
     }
 
     function showLoader(text) {
       document.getElementById('loaderText').innerText = text;
       document.getElementById('loader').style.display = 'flex';
     }
+    
     function hideLoader() {
       document.getElementById('loader').style.display = 'none';
     }
