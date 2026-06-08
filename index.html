@@ -124,7 +124,7 @@
                             ดูข่าวทั้งหมด <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
                         </button>
                     </div>
-                    <div id="home-news-container" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div id="home-news-container" class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
                         <!-- โหลดข้อมูลอัตโนมัติ -->
                         <div class="col-span-full py-10 text-center text-slate-400">
                             <i data-lucide="loader" class="w-8 h-8 animate-spin mx-auto mb-2 text-slate-300"></i> กำลังอัปเดตข่าวใหม่...
@@ -453,13 +453,13 @@
 
                     const hasLink = item.link && item.link.trim() !== "" && item.link !== "#";
                     const cardContent = `
-                        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer flex flex-col justify-between h-full">
+                        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer flex flex-col justify-between h-full min-h-[160px]">
                             <div>
                                 <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
                                     <span class="px-2.5 py-1 rounded-lg text-xs font-bold border ${badgeColor}">${item.type || 'ประกาศ'}</span>
                                     <span class="text-xs text-slate-400 flex items-center font-medium"><i data-lucide="calendar" class="w-3.5 h-3.5 mr-1 text-slate-300"></i> ${item.date || '-'}</span>
                                 </div>
-                                <h3 class="font-bold text-slate-800 line-clamp-2 text-md leading-relaxed">${item.title}</h3>
+                                <h3 class="font-bold text-slate-800 text-md leading-relaxed break-words">${item.title}</h3>
                             </div>
                             ${hasLink ? `
                             <a href="${item.link}" target="_blank" class="mt-4 text-blue-700 hover:text-blue-900 text-xs font-bold flex items-center">
@@ -492,17 +492,17 @@
                     const targetLink = doc.link1 || doc.link || '#';
 
                     docsContainer.innerHTML += `
-                        <li class="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
-                            <div class="flex items-center min-w-0 mr-2">
-                                <div class="p-2 rounded-lg ${iconColor} mr-3">
+                        <li class="flex items-start justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
+                            <div class="flex items-start min-w-0 mr-2">
+                                <div class="p-2 rounded-lg ${iconColor} mr-3 flex-shrink-0">
                                     <i data-lucide="${iconName}" class="w-5 h-5"></i>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-xs font-bold text-slate-700 truncate">${doc.name}</p>
+                                    <p class="text-xs font-bold text-slate-700 break-words leading-relaxed">${doc.name}</p>
                                     <p class="text-[10px] text-slate-400 mt-0.5">${doc.category || 'แบบฟอร์มหลัก'}</p>
                                 </div>
                             </div>
-                            <a href="${targetLink}" target="_blank" class="p-2 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-lg transition-colors flex-shrink-0" title="ดาวน์โหลดด่วน">
+                            <a href="${targetLink}" target="_blank" class="p-2 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-lg transition-colors flex-shrink-0 ml-1" title="ดาวน์โหลดด่วน">
                                 <i data-lucide="download" class="w-4 h-4"></i>
                             </a>
                         </li>
@@ -538,18 +538,18 @@
 
                 const hasLink = item.link && item.link.trim() !== "" && item.link !== "#";
                 gridContainer.innerHTML += `
-                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between h-64 hover:-translate-y-1">
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between min-h-[240px] hover:-translate-y-1">
                         <div>
                             <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
                                 <span class="px-3 py-1 rounded-lg text-xs font-bold border ${badgeColor}">${item.type || 'ประกาศ'}</span>
                                 <span class="text-xs text-slate-400 flex items-center font-medium"><i data-lucide="calendar" class="w-4 h-4 mr-1 text-slate-300"></i> ${item.date || '-'}</span>
                             </div>
-                            <h3 class="font-bold text-slate-800 text-md leading-relaxed line-clamp-3">${item.title}</h3>
+                            <h3 class="font-bold text-slate-800 text-md leading-relaxed break-words">${item.title}</h3>
                         </div>
                         ${hasLink ? `
-                        <a href="${item.link}" target="_blank" class="w-fit mt-4 text-blue-700 hover:text-blue-900 text-sm font-bold flex items-center hover:underline">
+                        <a href="${item.link}" target="_blank" class="w-fit mt-5 text-blue-700 hover:text-blue-900 text-sm font-bold flex items-center hover:underline">
                             อ่านประกาศฉบับเต็ม <i data-lucide="external-link" class="w-4 h-4 ml-1"></i>
-                        </a>` : `<div class="text-slate-300 text-xs mt-4">ไม่มีลิงก์แนบแนบ</div>`}
+                        </a>` : `<div class="text-slate-300 text-xs mt-5">ไม่มีลิงก์แนบแนบ</div>`}
                     </div>
                 `;
             });
@@ -643,12 +643,12 @@
                 }
 
                 gridContainer.innerHTML += `
-                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between hover:-translate-y-1">
-                        <div>
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between hover:-translate-y-1 min-h-[190px]">
+                        <div class="flex-grow flex flex-col">
                             <div class="flex items-center justify-between mb-3">
                                 <span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-slate-200">${doc.category || 'แบบฟอร์ม'}</span>
                             </div>
-                            <h3 class="font-bold text-slate-800 text-sm leading-relaxed line-clamp-2 h-10 mb-2">${doc.name}</h3>
+                            <h3 class="font-bold text-slate-800 text-sm leading-relaxed break-words mb-4 flex-grow">${doc.name}</h3>
                         </div>
                         ${downloadButtonsHTML}
                     </div>
@@ -722,7 +722,7 @@
                             </div>`}
                             <div class="p-6">
                                 <h3 class="font-bold text-slate-800 text-lg mb-2">${stat.title}</h3>
-                                <p class="text-slate-500 text-sm leading-relaxed mb-4">${stat.description || 'ไม่มีคำอธิบายประกอบเพิ่มเติม'}</p>
+                                <p class="text-slate-500 text-sm leading-relaxed mb-4 break-words">${stat.description || 'ไม่มีคำอธิบายประกอบเพิ่มเติม'}</p>
                             </div>
                         </div>
                         ${hasLink ? `
@@ -778,19 +778,19 @@
         function activateMockMode() {
             setTimeout(() => {
                 localNewsData = [
-                    { id: 1, title: "กำหนดการตรวจสอบผลการเรียน ภาคเรียนที่ 1 ประจำปีการศึกษา 2567", date: "20 พ.ค. 2567", type: "ประกาศ", link: "#" },
-                    { id: 2, title: "แจ้งคุณครูผู้สอนกำหนดส่งคะแนน ปพ.5 ระบบออนไลน์ ภายในวันที่ 30 มีนาคมนี้", date: "15 มี.ค. 2567", type: "ด่วน", link: "#" },
-                    { id: 3, title: "กำหนดการลงทะเบียนเรียนซ้ำ และสอบแก้ตัว ครั้งที่ 1 และครั้งที่ 2 สำหรับทุกระดับชั้น", date: "10 มี.ค. 2567", type: "ประกาศ", link: "#" },
-                    { id: 4, title: "คู่มือการสมัครสอบแก้ตัวด้วยตนเองแบบออนไลน์ ประจำปีการศึกษา 2567", date: "05 มี.ค. 2567", type: "ข่าวสาร", link: "#" },
-                    { id: 5, title: "เชิญเข้าร่วมสัมมนาแนะแนวการวัดผลหลักสูตรฐานสมรรถนะใหม่ สำหรับครูวิชาการระดับ ม.ต้น", date: "28 ก.พ. 2567", type: "ข่าวสาร", link: "#" }
+                    { id: 1, title: "กำหนดการตรวจสอบผลการเรียน ภาคเรียนที่ 1 ประจำปีการศึกษา 2567 สำหรับนักเรียนทุกระดับชั้นและทุกแผนกวิชา", date: "20 พ.ค. 2567", type: "ประกาศ", link: "#" },
+                    { id: 2, title: "แจ้งคุณครูผู้สอนกำหนดส่งคะแนน ปพ.5 ระบบออนไลน์ ภายในวันที่ 30 มีนาคมนี้ เพื่อสอดคล้องกับนโยบายใหม่ของฝ่ายวิชาการ", date: "15 มี.ค. 2567", type: "ด่วน", link: "#" },
+                    { id: 3, title: "กำหนดการลงทะเบียนเรียนซ้ำ และสอบแก้ตัว ครั้งที่ 1 และครั้งที่ 2 สำหรับทุกระดับชั้น ณ ห้องงานวัดผลและประเมินผล อาคารเรียนหลัก", date: "10 มี.ค. 2567", type: "ประกาศ", link: "#" },
+                    { id: 4, title: "คู่มือการสมัครสอบแก้ตัวด้วยตนเองแบบออนไลน์ ประจำปีการศึกษา 2567 ขั้นตอนอย่างละเอียดพร้อมระบบวิดีโออธิบายการทำงาน", date: "05 มี.ค. 2567", type: "ข่าวสาร", link: "#" },
+                    { id: 5, title: "เชิญเข้าร่วมสัมมนาแนะแนวการวัดผลหลักสูตรฐานสมรรถนะใหม่ สำหรับครูวิชาการระดับ ม.ต้น และคณะกรรมการดำเนินงาน", date: "28 ก.พ. 2567", type: "ข่าวสาร", link: "#" }
                 ];
                 
                 localDocsData = [
-                    { id: 1, name: "แบบฟอร์ม ปพ.5 บันทึกผลการพัฒนาคุณภาพผู้เรียน (ประจำห้อง)", category: "แบบฟอร์มครูผู้สอน", link1: "#", type1: "Excel", link2: "#", type2: "Word" },
-                    { id: 2, name: "คำร้องขอสอบแก้ตัวสำหรับนักเรียนที่มีผลการเรียนเป็น ร, มส, 0", category: "แบบฟอร์มนักเรียน", link1: "#", type1: "PDF", link2: "#", type2: "Word" },
-                    { id: 3, name: "คู่มือแนวทางการทำงานวัดผลและประเมินผลกลุ่มวิชาการ ฉบับใหม่", category: "คู่มือการเรียนการสอน", link1: "#", type1: "PDF" },
-                    { id: 4, name: "ปฏิทินปฏิบัติการฝ่ายวิชาการและงานวัดผล ประจำปีการศึกษา 2567", category: "กำหนดการ", link1: "#", type1: "PDF" },
-                    { id: 5, name: "แบบฟอร์มขอส่งแก้ไขผลการเรียนและคะแนนสะสมรายห้องเรียน", category: "แบบฟอร์มครูผู้สอน", link1: "#", type1: "Word" }
+                    { id: 1, name: "แบบฟอร์ม ปพ.5 บันทึกผลการพัฒนาคุณภาพผู้เรียน (ประจำห้องเรียนและรายกลุ่มสาระวิชาพื้นฐาน)", category: "แบบฟอร์มครูผู้สอน", link1: "#", type1: "Excel", link2: "#", type2: "Word" },
+                    { id: 2, name: "คำร้องขอสอบแก้ตัวสำหรับนักเรียนที่มีผลการเรียนเป็น ร, มส, 0 ทุกกรณี เพื่อนำเสนอขออนุมัติต่อฝ่ายวิชาการ", category: "แบบฟอร์มนักเรียน", link1: "#", type1: "PDF", link2: "#", type2: "Word" },
+                    { id: 3, name: "คู่มือแนวทางการทำงานวัดผลและประเมินผลกลุ่มวิชาการ ฉบับใหม่ ครอบคลุมการวัดผลตามมาตรฐานสมรรถนะผู้เรียน", category: "คู่มือการเรียนการสอน", link1: "#", type1: "PDF" },
+                    { id: 4, name: "ปฏิทินปฏิบัติการฝ่ายวิชาการและงานวัดผล ประจำปีการศึกษา 2567 ตารางกิจกรรมตลอดทั้งสองภาคเรียนอย่างสมบูรณ์", category: "กำหนดการ", link1: "#", type1: "PDF" },
+                    { id: 5, name: "แบบฟอร์มขอส่งแก้ไขผลการเรียนและคะแนนสะสมรายห้องเรียน (กรณีคุณครูส่งผลคะแนนตกหล่นหรือมีการแก้ไขภายหลัง)", category: "แบบฟอร์มครูผู้สอน", link1: "#", type1: "Word" }
                 ];
 
                 localStatsData = [
