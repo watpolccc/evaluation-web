@@ -755,7 +755,7 @@
 
   <script>
     // ⚠️ นำ URL เว็บแอป (Web App URL) ที่ได้จาก Google Apps Script มาใส่ไว้ตรงเครื่องหมายคำพูดด้านล่างนี้ 
-    const GAS_WEB_APP_URL = "วาง_URL_ของ_GAS_ที่นี่";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw4bXs8iiVQNr2oWuLWiiIn3kfPgH8Ntt-XPUkEEZV7UiGRpO3qgP1iwoiEfac5OUgv/exec";
     const apiKey = ""; 
 
     let isMockMode = false;
@@ -930,7 +930,7 @@
 
     // ตรวจจับสเตตัสเริ่มต้น
     window.addEventListener('DOMContentLoaded', () => {
-      if (GAS_WEB_APP_URL === "AKfycbw4bXs8iiVQNr2oWuLWiiIn3kfPgH8Ntt-XPUkEEZV7UiGRpO3qgP1iwoiEfac5OUgv" || GAS_WEB_APP_URL.trim() === "") {
+      if (GAS_WEB_APP_URL === "วาง_URL_ของ_GAS_ที่นี่" || GAS_WEB_APP_URL.trim() === "") {
         isMockMode = true;
         document.getElementById('gasUrlWarning').style.display = 'block';
       }
