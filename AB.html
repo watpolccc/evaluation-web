@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบบันทึกการแจ้งเตือนเวลาเรียน วิทยาลัยพณิชยการเชตุพน (GitHub Hosted)</title>
+  <title>ระบบบันทึกเวลาเรียนและแดชบอร์ด วิทยาลัยพณิชยการเชตุพน</title>
   
   <!-- CSS Library (Bootstrap 5 & Font Awesome & Material Symbols) -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,9 +12,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0" rel="stylesheet">
+  <!-- ChartJS สำหรับสร้างกราฟ Dashboard สวยงาม -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    /* --- CSS หลักของตัวแอปพลิเคชัน --- */
     body { 
       background: #f0f2f5; 
       font-family: 'Sarabun', sans-serif; 
@@ -26,7 +27,7 @@
       border-radius: 15px; 
       box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
       padding: 30px; 
-      max-width: 1000px; 
+      max-width: 1100px; 
       margin: auto; 
     }
     
@@ -77,10 +78,17 @@
       border-bottom: 3px solid #0d6efd; 
     }
     
-    .evidence-item { 
-      border-left: 5px solid #0dcaf0; 
+    .kpi-card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
     }
     
+    .kpi-card:hover {
+      transform: translateY(-3px);
+    }
+
     .admin-box { 
       background: #fdfdfd; 
       border: 1px dashed #ccc; 
@@ -195,7 +203,6 @@
       position: relative;
     }
 
-    /* เส้นประสำหรับระบุฟิลด์ที่แก้ไขตัวหนังสือได้ - ปรับแก้จัดกลางและพอดีกับข้อความ */
     .memo-preview-box [contenteditable="true"] {
       outline: none;
       border-bottom: 1px dashed #94a3b8;
@@ -217,27 +224,20 @@
       border-bottom: 1.5px solid #3b82f6;
     }
 
-    /* บังคับไม่ให้คอลัมน์กั้นย่อหน้าโดนขีดเส้นประ */
-    .memo-preview-box .indent-spacer {
-      display: inline-block;
-      width: 2.5cm;
-    }
-
-    /* ตารางภายในบันทึกข้อความ */
     .report-table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 15px;
       margin-bottom: 15px;
-      table-layout: fixed; /* ล็อกสัดส่วน ป้องกันอักขระดันให้ผิดส่วน */
+      table-layout: fixed; 
     }
     
     .report-table th, .report-table td {
       border: 1px solid #000000 !important;
       padding: 4px 6px;
-      font-size: 13.5pt; /* ขนาดอักษรแนบท้ายทางราชการเพื่อไม่ให้บรรทัดสูงและโย้เย้ */
+      font-size: 13.5pt; 
       line-height: 1.2;
-      word-break: keep-all; /* ป้องกันการแยกวรรณยุกต์และตัวสะกดไทย */
+      word-break: keep-all; 
       overflow-wrap: break-word;
     }
     
@@ -259,24 +259,12 @@
       vertical-align: bottom;
     }
 
-    .divider-line {
-      border-top: 2px solid #000000;
-      margin-top: 5px;
-      margin-bottom: 15px;
-    }
-
     .opinion-box {
       border: 1px solid #000000 !important;
       padding: 10px;
       min-height: 110px;
       font-size: 14pt;
       line-height: 1.3;
-    }
-    
-    .teacher-sig-area {
-      text-align: center;
-      padding-top: 15px;
-      line-height: 1.5;
     }
 
     /* ===== PRINT SYSTEM ===== */
@@ -316,7 +304,6 @@
       tr { page-break-inside: avoid !important; }
       thead { display: table-header-group !important; }
       
-      /* ลบเส้นประตอนพิมพ์ออกจริง */
       .page-doc [contenteditable="true"] {
         border-bottom: none !important;
         background: none !important;
@@ -332,26 +319,326 @@
     <b id="loaderText">กำลังประมวลผลระบบ...</b>
   </div>
 
-  <!-- ป๊อปอัปแจ้งเตือนความปลอดภัยเฉพาะนักเรียน (รหัส 11 หลัก) -->
-  <div class="modal fade" id="accessDeniedModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <!-- ป๊อปอัปแจ้งเตือนความปลอดภัยเฉพาะกลุ่มนักเรียน -->
+  <div class="modal fade" id="accessDeniedModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-danger">
         <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title"><i class="fas fa-exclamation-circle"></i> ปฏิเสธการเข้าใช้งาน</h5>
+          <h5 class="modal-title"><i class="fas fa-exclamation-circle"></i> ข้อความแจ้งเตือนความปลอดภัย</h5>
         </div>
         <div class="modal-body text-center py-4">
           <i class="fas fa-user-slash text-danger fa-4x mb-3"></i>
           <h4 class="text-danger fw-bold mb-3">ระบบสำหรับครูผู้สอนเท่านั้น</h4>
-          <p class="text-muted" id="accessDeniedModalBody">คุณไม่มีสิทธิ์เข้าใช้งานระบบเนื่องจากตรวจพบเป็นบัญชีนักเรียน</p>
+          <p class="text-muted" id="accessDeniedModalBody">คุณไม่มีสิทธิ์เข้าใช้งานระบบบันทึกเวลาเรียนเนื่องจากใช้บัญชีนักเรียน</p>
         </div>
-        <div class="modal-footer justify-content-center">
-          <button class="btn btn-danger px-4" onclick="logoutMock()">สลับบัญชีเมลครู</button>
+        <div class="modal-footer justify-content-center bg-light">
+          <a href="https://accounts.google.com/Logout" class="btn btn-danger px-4">
+            <i class="fas fa-sign-out-alt"></i> ลงชื่อออก / สลับบัญชีเมลครู
+          </a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- หน้าต่างสลับบัญชีและตรวจสอบสิทธิ์เข้าใช้ระบบ -->
+  <!-- กล่องโมดอลแจ้งเตือนระบบ -->
+  <div class="modal fade" id="customAlertModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-warning">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle"></i> แจ้งเตือนจากระบบ</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-4 text-center">
+          <p class="fs-6 mb-0" id="customAlertBody">เนื้อหาข้อความเตือน...</p>
+        </div>
+        <div class="modal-footer justify-content-center">
+          <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">ตกลง</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- หน้าจอแจ้งเตือนพื้นหลังเมื่อไม่มีสิทธิ์เข้าใช้งานระบบ -->
+  <div id="unauthorizedBox" class="container mt-5" style="display:none; max-width: 600px;">
+    <div class="card border-danger shadow-lg">
+      <div class="card-header bg-danger text-white text-center py-3">
+        <h4 class="mb-0"><i class="fas fa-exclamation-triangle"></i> ปฏิเสธการเข้าใช้งานระบบ</h4>
+      </div>
+      <div class="card-body text-center py-5">
+        <p class="fs-5 text-muted mb-4" id="unauthorizedReason">คุณไม่มีสิทธิ์เข้าใช้งานระบบนี้</p>
+        <div class="alert alert-warning py-3" style="font-size:0.9rem;">
+          <i class="fas fa-info-circle"></i> ระบบนี้สงวนสิทธิ์การใช้งานสำหรับคุณครูและเจ้าหน้าที่ วิทยาลัยพณิชยการเชตุพน เท่านั้น
+        </div>
+        <a href="https://accounts.google.com/Logout" class="btn btn-danger mt-3">
+          <i class="fas fa-sign-out-alt"></i> ลงชื่อออก / สลับบัญชีเมลครู
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- หน้าจอระบบหลักสำหรับผู้มีสิทธิ์ใช้งาน -->
+  <div class="main-card" id="mainAppCard" style="display:none;">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="text-primary m-0">
+        <i class="fas fa-user-check"></i> ระบบบันทึกการแจ้งเตือนเวลาเรียน<br>
+        <span class="fs-5 text-secondary">วิทยาลัยพณิชยการเชตุพน (GitHub Hosted)</span>
+      </h2>
+      <div class="text-end">
+        <span class="badge bg-primary fs-6 p-2 rounded" id="currentSemesterYearBadge">ภาคเรียนที่ 1 ปีการศึกษา 2569</span>
+      </div>
+    </div>
+    
+    <div id="userBar" class="user-info d-flex justify-content-between align-items-center">
+       <span><i class="fas fa-user-circle"></i> ผู้ใช้งานปัจจุบัน: <b id="currentEmail">กำลังดึงข้อมูล...</b></span>
+       <button class="btn btn-sm btn-outline-danger" onclick="logoutUser()"><i class="fas fa-sign-out-alt"></i> สลับบัญชี / ลงชื่อออก</button>
+    </div>
+
+    <div class="alert alert-warning mb-4" id="gasUrlWarning" style="display:none;">
+      <h5><i class="fas fa-exclamation-triangle"></i> อยู่ในสถานะทดลองพรีวิว (Mock Mode)</h5>
+      <p class="mb-0">ขณะนี้หน้าเว็บกำลังเปิดระบบสาธิตในตัวเนื่องจากยังไม่ได้นำรหัส Web App URL จาก Google Apps Script มาเชื่อมต่อ</p>
+    </div>
+
+    <!-- แท็บเมนูควบคุมหลัก -->
+    <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard-pane" type="button" role="tab" onclick="renderDashboardCharts()"><i class="fas fa-chart-line"></i> แดชบอร์ดสถิติรวม</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="record-tab" data-bs-toggle="tab" data-bs-target="#record-pane" type="button" role="tab"><i class="fas fa-edit"></i> บันทึกการแจ้งเตือนเวลาเรียน</button>
+      </li>
+      <li class="nav-item" role="presentation" id="adminTabLi" style="display:none;">
+        <button class="nav-link" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin-pane" type="button" role="tab"><i class="fas fa-database"></i> จัดการข้อมูลระบบ (แอดมิน)</button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+      <!-- ============================================== -->
+      <!-- แท็บที่ 1: แดชบอร์ดสรุปสถิติ (กราฟแท่ง) -->
+      <!-- ============================================== -->
+      <div class="tab-pane fade show active" id="dashboard-pane" role="tabpanel">
+        <h4 class="mb-4 text-dark"><i class="fas fa-tachometer-alt text-primary"></i> แดชบอร์ดสรุปสถิตินักเรียนขาดเรียน (ทั้งวิทยาลัย)</h4>
+        
+        <!-- KPI Cards สรุปตัวเลขไม่ซ้ำกัน -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <div class="card kpi-card bg-primary text-white p-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-uppercase text-white-50 m-0" style="font-size:0.8rem">วิชาที่แจ้งขาดเรียน (วิชา)</h6>
+                  <h2 class="fw-bold m-0" id="kpiUniqueSubjects">๐</h2>
+                </div>
+                <i class="fas fa-book fa-2x text-white-50"></i>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card kpi-card bg-success text-white p-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-uppercase text-white-50 m-0" style="font-size:0.8rem">จำนวนอาจารย์ผู้รายงาน (ท่าน)</h6>
+                  <h2 class="fw-bold m-0" id="kpiUniqueTeachers">๐</h2>
+                </div>
+                <i class="fas fa-chalkboard-teacher fa-2x text-white-50"></i>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card kpi-card bg-danger text-white p-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-uppercase text-white-50 m-0" style="font-size:0.8rem">นักเรียนที่โดนตักเตือน (รายคน)</h6>
+                  <h2 class="fw-bold m-0" id="kpiUniqueStudents">๐</h2>
+                </div>
+                <i class="fas fa-user-times fa-2x text-white-50"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Insight Box -->
+        <div class="card border-0 shadow-sm p-4 mb-4 rounded-3" style="background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); border-left: 4px solid #6f42c1;">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold m-0 text-dark" style="color: #6f42c1 !important;"><i class="fas fa-robot"></i> AI วิเคราะห์ภาพรวมสถิติ</h5>
+            <button class="btn btn-outline-primary fw-bold btn-sm" id="btnGenerateInsight" onclick="generateDashboardInsight()">
+              <i class="fas fa-magic"></i> สรุปข้อมูลด้วย AI ✨
+            </button>
+          </div>
+          <div id="aiInsightResult" class="text-muted" style="font-size: 1rem; line-height: 1.6;">
+            คลิกปุ่ม "สรุปข้อมูลด้วย AI ✨" เพื่อให้ Gemini วิเคราะห์แนวโน้มการขาดเรียนและเสนอแนะวิธีการแก้ปัญหาจากภาพรวมสถิติ
+          </div>
+        </div>
+
+        <!-- พื้นที่แสดงกราฟแบบดั้งเดิม (Bar, Doughnut, Bar) -->
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="card border-0 shadow-sm p-3">
+              <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-chart-bar text-primary"></i> จำนวนนักเรียนแจ้งขาดเรียน แยกตามแผนกวิชา (คน)</h6>
+              <div style="height: 250px; position: relative;">
+                <canvas id="chartDeptAbsences"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card border-0 shadow-sm p-3">
+              <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-chart-pie text-success"></i> อัตราส่วนแจ้งขาดเรียน แยกตามชั้นปี (คน)</h6>
+              <div style="height: 250px; position: relative;">
+                <canvas id="chartLevelAbsences"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="card border-0 shadow-sm p-3">
+              <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-percent text-danger"></i> เปอร์เซ็นต์การขาดเรียนสะสมเฉลี่ย แยกตามแผนกวิชาและชั้นปี (%)</h6>
+              <div style="height: 300px; position: relative;">
+                <canvas id="chartAverageAbsencePercent"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- แท็บที่ 2: บันทึกข้อมูลการแจ้งเตือน (ไม่มีแนบหลักฐาน) -->
+      <!-- ============================================== -->
+      <div class="tab-pane fade" id="record-pane" role="tabpanel">
+        <div class="row g-3 bg-light p-3 rounded border mb-4 shadow-sm">
+          <div class="col-md-6">
+            <label class="form-label text-secondary"><b>1. เลือกแผนกวิชา</b></label>
+            <select id="deptSelect" class="form-select border-primary" onchange="onDeptChange()"><option value="">-- เลือกแผนกที่ต้องการส่งรายงาน --</option></select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-secondary"><b>2. ชื่อครูผู้สอน</b></label>
+            <select id="teacherSelect" class="form-select border-primary" onchange="onTeacherChange()" disabled><option value="">-- เลือกครู --</option></select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-secondary"><b>3. รายวิชา</b></label>
+            <select id="subjectSelect" class="form-select border-primary" onchange="onSubjectChange()" disabled><option value="">-- เลือกวิชา --</option></select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label text-danger"><b>กรอกจำนวนคาบรวม (ทั้งเทอม)</b></label>
+            <input type="number" id="totalPeriods" class="form-control bg-white border-danger fw-bold" placeholder="ป้อนตัวเลขคาบรวม..." oninput="updateAllStudentPercents()">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label text-primary"><b>4. เลือกรอบการรายงาน</b></label>
+            <select id="reportPhaseSelect" class="form-select border-primary fw-bold text-primary" onchange="showStudentsMulti()">
+              <option value="ครั้งที่ 1">ครั้งที่ 1 (สัปดาห์ที่ 1-7)</option>
+              <option value="ครั้งที่ 2">ครั้งที่ 2 (สัปดาห์ที่ 8-15)</option>
+            </select>
+          </div>
+          <div class="col-md-12">
+            <label class="form-label text-secondary"><b>5. เลือกห้องเรียน (ติ๊กแสดงรายชื่อด้านล่าง)</b></label>
+            <div id="roomCheckboxGroup" class="d-flex flex-wrap gap-3 p-3 border rounded bg-white"><small class="text-muted">กรุณาเลือกวิชาก่อน...</small></div>
+          </div>
+        </div>
+
+        <div id="studentSection" style="display:none;">
+          <h5 class="mb-3 text-dark"><i class="fas fa-users text-primary"></i> รายชื่อนักเรียนเพื่อทำการรายงานผลการขาดเรียน</h5>
+          <div id="studentList" class="mb-4"></div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary w-25 p-3 shadow-sm" onclick="resetForm()"><b>ล้างข้อมูล</b></button>
+            <button class="btn btn-primary w-75 p-3 shadow-sm" onclick="validateAndOpenSummary()"><b><i class="fas fa-save"></i> บันทึกข้อมูลและออกเอกสารบันทึกข้อความ</b></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- แท็บที่ 3: จัดการข้อมูลระบบ (แอดมิน) -->
+      <!-- ============================================== -->
+      <div class="tab-pane fade" id="admin-pane" role="tabpanel">
+        
+        <!-- ระบบเปลี่ยนเทอม ปีการศึกษา เคลียร์ตารางวิชา และเลื่อนระดับชั้น -->
+        <div class="card border-danger mb-4 shadow-sm">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="fas fa-clock-rotate-left"></i> ระบบเปลี่ยนภาคเรียนและปีการศึกษา (จบเทอม/เลื่อนชั้นปี)</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted mb-3">
+              เมื่อเปลี่ยนภาคเรียนใหม่ คุณครูแอดมินสามารถคลิกดำเนินการปรับปรุงข้อมูลได้เลย โดยระบบจะประมวลผลคำสั่งดังต่อไปนี้อัตโนมัติ:
+            </p>
+            <ul>
+              <li><strong>เปลี่ยนรอบเทอมและปี:</strong> สลับภาคเรียน (เทอม 1 $\leftrightarrow$ เทอม 2) และหากสลับจากเทอม 2 ขึ้นเทอม 1 ระบบจะบวกปีการศึกษาเพิ่มขึ้น 1 ปีให้อัตโนมัติ</li>
+              <li><strong>ล้างวิชาดิบ:</strong> เคลียร์สถิติตารางวิชาเรียนของครูผู้สอนทุกแผนกวิชาให้ว่าง เพื่อเตรียมรับการอัปโหลด CSV รอบเทอมใหม่</li>
+              <li><strong>เลื่อนระดับชั้นนักเรียน:</strong> ขยับชั้นปีนักศึกษาขึ้น 1 ระดับชั้นอัตโนมัติ (ปวช.1 $\rightarrow$ ปวช.2 $\rightarrow$ ปวช.3, ปวส.1 $\rightarrow$ ปวส.2) และเคลียร์ล้างนักศึกษาปีสูงสุดออกทั้งหมด</li>
+            </ul>
+            <div class="mt-1">
+              <button class="btn btn-danger fw-bold p-3 px-4 shadow-sm" onclick="triggerToggleSemesterAndPromote()">
+                <i class="fas fa-sync"></i> ประมวลผลเปลี่ยนภาคเรียนและเลื่อนระดับชั้นผู้เรียน
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-warning mb-4">
+          <i class="fas fa-exclamation-triangle"></i> <b>การนำเข้าฐานข้อมูลวิทยาลัยผ่าน CSV:</b> การอัปโหลดไฟล์จะเป็นการเขียนทับข้อมูลในแผ่นงานเดิมของระบบ กรุณาตรวจสอบหัวตารางให้ตรงตามโครงสร้าง Template ก่อนกดยืนยันอัปโหลด
+        </div>
+
+        <div class="row g-3">
+          <!-- กล่องจัดการข้อมูลรายวิชาและผู้สอน -->
+          <div class="col-md-6">
+            <div class="admin-box d-flex flex-column justify-content-between h-100">
+              <div>
+                <h5 class="text-primary mb-3"><i class="fas fa-university"></i> อัปโหลดโครงสร้างวิชา/ครู (แยกแผนก)</h5>
+                <div class="mb-3">
+                  <label class="form-label"><b>1. เลือกแผนกวิชาที่ต้องการบันทึก</b></label>
+                  <select id="csvDeptSelect" class="form-select">
+                    <option value="">-- เลือกแผนกวิชา --</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label"><b>2. เลือกไฟล์ CSV ข้อมูลวิชา</b></label>
+                  <input type="file" id="csvDeptFile" class="form-control" accept=".csv">
+                  <div class="form-text">หัวตาราง: แผนก, คำนำหน้า, ชื่อ, นามสกุล, วิชา, ห้อง, คาบทั้งหมด (เว้นว่างคาบได้)</div>
+                </div>
+                <div class="d-flex gap-2 mb-3">
+                  <button class="btn btn-outline-primary btn-sm w-100" onclick="downloadDeptTemplate()">
+                    <i class="fas fa-download"></i> 📥 ดาวน์โหลด Template CSV รายวิชา
+                  </button>
+                </div>
+                <button class="btn btn-primary w-100 py-2 fw-bold" onclick="uploadCsvDept()">
+                  <i class="fas fa-file-import"></i> อัปโหลดข้อมูลแผนกวิชา
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- กล่องจัดการข้อมูลรายชื่อนักเรียน -->
+          <div class="col-md-6">
+            <div class="admin-box d-flex flex-column justify-content-between h-100">
+              <div>
+                <h5 class="text-info mb-3"><i class="fas fa-users-cog"></i> อัปโหลดรายชื่อนักเรียน (แยกตามระดับชั้น)</h5>
+                <div class="mb-3">
+                  <label class="form-label"><b>1. เลือกระดับชั้นที่ต้องการบันทึก</b></label>
+                  <select id="csvLevelSelect" class="form-select">
+                    <option value="">-- เลือกระดับชั้น --</option>
+                    <option value="ปวช.1">ปวช.1</option>
+                    <option value="ปวช.2">ปวช.2</option>
+                    <option value="ปวช.3">ปวช.3</option>
+                    <option value="ปวส.1">ปวส.1</option>
+                    <option value="ปวส.2">ปวส.2</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label"><b>2. เลือกไฟล์ CSV รายชื่อนักเรียน</b></label>
+                  <input type="file" id="csvLevelFile" class="form-control" accept=".csv">
+                  <div class="form-text">หัวตาราง: ห้องเรียน, คำนำหน้า, ชื่อ, นามสกุล, เลขประจำตัว, ครูที่ปรึกษา</div>
+                </div>
+                <div class="d-flex gap-2 mb-3">
+                  <button class="btn btn-outline-info btn-sm w-100" onclick="downloadLevelTemplate()">
+                    <i class="fas fa-download"></i> 📥 ดาวน์โหลด Template CSV รายชื่อนักเรียน
+                  </button>
+                </div>
+                <button class="btn btn-info text-white w-100 py-2 fw-bold" onclick="uploadCsvLevel()">
+                  <i class="fas fa-users"></i> อัปโหลดรายชื่อนักเรียน
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- หน้าต่างสลับบัญชีและตรวจสอบสิทธิ์เข้าใช้ระบบ (Login Modal) -->
   <div class="modal fade" id="loginModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-primary shadow-lg">
@@ -369,7 +656,7 @@
             <input type="email" id="loginEmailInput" class="form-control form-control-lg" placeholder="yourname@chetupon.ac.th" value="mock.teacher@chetupon.ac.th">
           </div>
           <div class="alert alert-info py-2" style="font-size:0.8rem">
-            <i class="fas fa-info-circle"></i> <b>ทดสอบระบบ:</b> สามารถป้อนบัญชีจำลองได้ เช่น ครูทั่วไป: <code>mock.teacher@chetupon.ac.th</code> | แอดมิน: <code>watpol.ccc@chetupon.ac.th</code> | นักศึกษา: <code>66201020001@chetupon.ac.th</code>
+            <i class="fas fa-info-circle"></i> <b>ทดสอบระบบ:</b> สามารถป้อนบัญชีจำลองได้ เช่น ครูทั่วไป: <code>mock.teacher@chetupon.ac.th</code> | แอดมิน: <code>watpol.ccc@chetupon.ac.th</code>
           </div>
         </div>
         <div class="modal-footer justify-content-center">
@@ -389,11 +676,10 @@
             ตรวจสอบตัวอย่างบันทึกข้อความเสนอผู้พิจารณา
           </h5>
           
-          <!-- แถวสลับหน้าในโมดอลกรณีออกใบแจ้งแยกประเภทคัดสรรคนละใบ -->
           <div class="d-flex align-items-center gap-2" id="previewPageSelectorWrapper">
             <span class="text-white-50 small">เลือกหน้าที่พิมพ์:</span>
             <select class="form-select form-select-sm bg-secondary text-white border-0" id="previewPageSelect" onchange="switchPreviewPage(this.value)" style="width: auto;">
-               <!-- จะเพิ่มหน้าที่สร้างด้วย JS อัตโนมัติ -->
+               <!-- ดึงจัดหน้าด้วย JS -->
             </select>
           </div>
 
@@ -435,199 +721,24 @@
             <div class="tb-sep"></div>
             <button class="tb-btn" onclick="execEditorCmd('undo')"><span class="material-symbols-outlined">undo</span></button>
             <button class="tb-btn" onclick="execEditorCmd('redo')"><span class="material-symbols-outlined">redo</span></button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" id="btnMemoAdvice" onclick="generateMemoAdvice()" style="color: #6f42c1; font-weight: bold; border: 1px solid #d8b4fe;" title="ร่างความเห็นด้วย AI">
+              <i class="fas fa-magic"></i> ร่างความเห็นด้วย AI ✨
+            </button>
           </div>
 
           <!-- หน้าจอพรีวิวแบบกระดาษ A4 ขนาดจริง -->
           <div class="memo-preview-container-scroll w-100 flex-grow-1">
              <div class="memo-preview-box page-doc" id="previewMemoContainer" contenteditable="true" style="outline:none;">
-                <!-- HTML สารบรรณจะถูก Render และฉีดเข้ามาในตู้คอนเทนเนอร์นี้ -->
              </div>
           </div>
         </div>
         
         <div class="modal-footer justify-content-between bg-light">
-          <small class="text-muted"><i class="fas fa-info-circle"></i> คุณครูสามารถดับเบิ้ลคลิกเพื่อเลือกคลุมดำ และจัดพริ้นท์ตัวหนา/เอียงตัวอักษรบนบันทึกข้อความด้านบนได้ทันทีก่อนปริ้นท์</small>
+          <small class="text-muted"><i class="fas fa-info-circle"></i> คุณครูสามารถดับเบิ้ลคลิกเพื่อแก้ไขตัวหนังสือเส้นประ หรือแต่งตัวหนา เอียง ขยายฟอนต์ ได้ตามอัธยาศัย</small>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">แก้ไขข้อมูลระบบ</button>
+            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">ปิดหน้าต่างพรีวิว</button>
             <button type="button" class="btn btn-success fw-bold px-4" onclick="triggerBrowserPrint()"><i class="fas fa-print"></i> 🖨️ สั่งพิมพ์ใบที่เลือก / บันทึก PDF</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- แอปพลิเคชันโครงสร้างควบคุมหลัก -->
-  <div class="main-card" id="mainAppCard" style="display:none;">
-    <h2 class="text-center mb-4 text-primary">
-      <i class="fas fa-user-check"></i> ระบบบันทึกการแจ้งเตือนเวลาเรียน<br>
-      <span class="fs-4 text-secondary">วิทยาลัยพณิชยการเชตุพน (GitHub Hosted)</span>
-    </h2>
-
-    <!-- บล็อกแสดงข้อมูลบัญชีผู้ใช้จริงบน GitHub -->
-    <div id="userBar" class="user-info d-flex justify-content-between align-items-center">
-       <span><i class="fas fa-user-circle"></i> ผู้ใช้งานปัจจุบัน: <b id="currentEmail">กำลังดึงข้อมูล...</b></span>
-       <button class="btn btn-sm btn-outline-danger" onclick="logoutUser()"><i class="fas fa-sign-out-alt"></i> สลับบัญชี / ลงชื่อออก</button>
-    </div>
-
-    <!-- บล็อกเตือนสถานะเมื่อยังไม่มีการติดตั้ง URL จาก Google Apps Script (GAS) -->
-    <div class="alert alert-warning mb-4" id="gasUrlWarning" style="display:none;">
-      <h5><i class="fas fa-exclamation-triangle"></i> อยู่ในสถานะทดลองพรีวิว (Mock Mode)</h5>
-      <p class="mb-0">ขณะนี้หน้าเว็บกำลังเปิดระบบสาธิตในตัวเนื่องจากยังไม่ได้นำรหัส Web App URL จาก Google Apps Script มาเชื่อมต่อ หากคุณครูทำการติดตั้งเสร็จแล้วระบบจะสลับมาดึงค่าจาก Google Sheets จริงอัตโนมัติทันทีครับ</p>
-    </div>
-
-    <!-- แท็บควบคุม -->
-    <ul class="nav nav-tabs mb-4" id="appTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="record-tab" data-bs-toggle="tab" data-bs-target="#record-pane" type="button" role="tab"><i class="fas fa-edit"></i> 1. บันทึกการแจ้งเตือนเวลาเรียน</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="evidence-tab" data-bs-toggle="tab" data-bs-target="#evidence-pane" type="button" role="tab" onclick="renderEvidenceTab()"><i class="fas fa-paperclip"></i> 2. แนบหลักฐานการตักเตือน</button>
-      </li>
-      <li class="nav-item" role="presentation" id="adminTabLi" style="display: none;">
-        <button class="nav-link" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin-pane" type="button" role="tab"><i class="fas fa-database"></i> 3. จัดการข้อมูลระบบ (แอดมิน)</button>
-      </li>
-    </ul>
-
-    <div class="tab-content" id="appTabsContent">
-      
-      <!-- แท็บที่ 1: บันทึกข้อมูล -->
-      <div class="tab-pane fade show active" id="record-pane" role="tabpanel">
-        <div class="row g-3 bg-light p-3 rounded border mb-4">
-          <div class="col-md-6">
-            <label class="form-label"><b>1. แผนกวิชา</b></label>
-            <select id="deptSelect" class="form-select" onchange="onDeptChange()"><option value="">-- เลือกแผนก --</option></select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label"><b>2. ชื่อครูผู้สอน</b></label>
-            <select id="teacherSelect" class="form-select" onchange="onTeacherChange()" disabled><option value="">-- เลือกครูผู้สอน --</option></select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label"><b>3. รายวิชา</b></label>
-            <select id="subjectSelect" class="form-select" onchange="onSubjectChange()" disabled><option value="">-- เลือกวิชาเรียน --</option></select>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label text-success"><b>คาบเรียนทั้งหมด (ทั้งเทอม)</b></label>
-            <input type="number" id="totalPeriods" class="form-control bg-white" placeholder="ดึงอัตโนมัติ..." readonly>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label text-primary"><b>4. รอบการรายงานผลเรียน</b></label>
-            <select id="reportPhaseSelect" class="form-select" onchange="showStudentsMulti()">
-              <option value="ครั้งที่ 1">ครั้งที่ 1 (สัปดาห์ที่ 1-7)</option>
-              <option value="ครั้งที่ 2">ครั้งที่ 2 (สัปดาห์ที่ 8-15)</option>
-            </select>
-          </div>
-          <div class="col-md-12">
-            <label class="form-label"><b>5. ห้องเรียน</b></label>
-            <div id="roomCheckboxGroup" class="d-flex flex-wrap gap-3 p-3 border rounded bg-white"><small class="text-muted">กรุณาเลือกวิชาด้านบนก่อน...</small></div>
-          </div>
-        </div>
-
-        <div id="studentSection" style="display:none;">
-          <h5 class="mb-3 text-secondary"><i class="fas fa-users"></i> รายชื่อนักเรียนคัดกรอง</h5>
-          <div id="studentList" class="mb-4"></div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary w-25 p-3 shadow-sm" onclick="resetForm()"><b>รีเซ็ต</b></button>
-            <button class="btn btn-primary w-75 p-3 shadow-sm" onclick="validateAndOpenSummary()"><b><i class="fas fa-save"></i> บันทึกและพรีวิวบันทึกข้อความ</b></button>
-          </div>
-        </div>
-      </div>
-
-      <!-- แท็บย่อยที่ 2: แนบหลักฐาน -->
-      <div class="tab-pane fade" id="evidence-pane" role="tabpanel">
-        <div class="alert alert-info">
-          <i class="fas fa-info-circle"></i> เลือกข้อมูลผู้รายงาน และห้องเรียน เพื่อทำการอัปโหลดหลักฐานเอกสารตักเตือน ระบบจะทำการประมวลผลย่อภาพไฟล์ทันทีก่อนบันทึกเพื่อความเสถียร
-        </div>
-
-        <div class="row g-3 bg-light p-3 rounded border mb-4">
-          <div class="col-md-6">
-            <label class="form-label"><b>1. แผนกวิชา</b></label>
-            <select id="evidenceDeptSelect" class="form-select" onchange="onEvidenceDeptChange()">
-              <option value="">-- เลือกแผนกวิชา --</option>
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label"><b>2. ชื่อครูผู้สอน</b></label>
-            <select id="evidenceTeacherSelect" class="form-select" onchange="onEvidenceTeacherChange()" disabled>
-              <option value="">-- เลือกครู --</option>
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label"><b>3. เลือกวิชาที่มีรายการค้าง</b></label>
-            <select id="evidenceSubjectSelect" class="form-select" onchange="onEvidenceSubjectChange()" disabled>
-              <option value="">-- เลือกวิชา --</option>
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label"><b>4. เลือกห้องเรียน</b></label>
-            <select id="evidenceRoomSelect" class="form-select" onchange="filterEvidenceList()" disabled>
-              <option value="">-- เลือกห้องเรียน --</option>
-            </select>
-          </div>
-        </div>
-
-        <div id="pendingEvidenceList">
-          <div class="text-center p-5 text-muted"><i class="fas fa-arrow-up fa-2x mb-3 text-primary"></i><br>กรุณาค้นหาและเลือกข้อมูลเงื่อนไขด้านบนเพื่อแนบหลักฐาน</div>
-        </div>
-      </div>
-
-      <!-- แท็บย่อยที่ 3: จัดการข้อมูลสำหรับแอดมิน -->
-      <div class="tab-pane fade" id="admin-pane" role="tabpanel">
-        <div class="alert alert-warning mb-4">
-          <i class="fas fa-exclamation-triangle"></i> <b>การนำเข้าฐานข้อมูลวิทยาลัยผ่าน CSV:</b> การอัปโหลดไฟล์จะเป็นการเขียนทับข้อมูลในแผ่นงานเดิมของระบบ กรุณาตรวจสอบหัวตารางให้ตรงตามโครงสร้าง Template ก่อนกดยืนยันอัปโหลด
-        </div>
-
-        <div class="row g-3">
-          <!-- วิชาเรียน -->
-          <div class="col-md-6">
-            <div class="admin-box">
-              <h5 class="text-primary mb-3"><i class="fas fa-university"></i> อัปโหลดวิชา/ครู (CSV)</h5>
-              <div class="mb-3">
-                <label class="form-label"><b>1. เลือกแผนกวิชา</b></label>
-                <select id="csvDeptSelect" class="form-select"><option value="">-- เลือกแผนกวิชา --</option></select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label"><b>2. เลือกไฟล์ CSV</b></label>
-                <input type="file" id="csvDeptFile" class="form-control" accept=".csv">
-              </div>
-              <div class="d-flex gap-2 mb-3">
-                <button class="btn btn-outline-primary btn-sm w-100" onclick="downloadDeptTemplate()">
-                  <i class="fas fa-download"></i> ดาวน์โหลด Template CSV รายวิชา
-                </button>
-              </div>
-              <button class="btn btn-primary w-100 py-2 fw-bold" onclick="uploadCsvDeptApi()">
-                <i class="fas fa-file-import"></i> อัปโหลดข้อมูลแผนกวิชา
-              </button>
-            </div>
-          </div>
-
-          <!-- นักเรียน -->
-          <div class="col-md-6">
-            <div class="admin-box">
-              <h5 class="text-info mb-3"><i class="fas fa-users-cog"></i> อัปโหลดรายชื่อนักเรียน (CSV)</h5>
-              <div class="mb-3">
-                <label class="form-label"><b>1. เลือกระดับชั้น</b></label>
-                <select id="csvLevelSelect" class="form-select">
-                  <option value="">-- เลือกระดับชั้น --</option>
-                  <option value="ปวช.1">ปวช.1</option>
-                  <option value="ปวช.2">ปวช.2</option>
-                  <option value="ปวช.3">ปวช.3</option>
-                  <option value="ปวส.1">ปวส.1</option>
-                  <option value="ปวส.2">ปวส.2</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label"><b>2. เลือกไฟล์ CSV</b></label>
-                <input type="file" id="csvLevelFile" class="form-control" accept=".csv">
-              </div>
-              <div class="d-flex gap-2 mb-3">
-                <button class="btn btn-outline-info btn-sm w-100" onclick="downloadLevelTemplate()">
-                  <i class="fas fa-download"></i> ดาวน์โหลด Template CSV รายชื่อนักเรียน
-                </button>
-              </div>
-              <button class="btn btn-info text-white w-100 py-2 fw-bold" onclick="uploadCsvLevelApi()">
-                <i class="fas fa-users"></i> อัปโหลดรายชื่อนักเรียน
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -636,23 +747,29 @@
 
   <div id="printArea">
     <div class="page-doc" id="printedMemoContainer">
-       <!-- ถูกสลับมาใส่ตรงนี้เวลาสั่งปริ้นท์จริงทางระบบเครื่องปริ้นท์ -->
     </div>
   </div>
 
-  <!-- นำเข้าไลบรารีสคริปต์หลักสำหรับ Bootstrap 5 -->
+  <!-- นำเข้าสคริปต์หลักสำหรับ Bootstrap 5 -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
     // ⚠️ นำ URL เว็บแอป (Web App URL) ที่ได้จาก Google Apps Script มาใส่ไว้ตรงเครื่องหมายคำพูดด้านล่างนี้ 
-    const GAS_WEB_APP_URL = "AKfycbxsXWRYVb534NjGwW8VzvGQIBUVdIPSaOsnzj9PfRcvUf6RBqBb-kbTtnX4njae2c75";
+    const GAS_WEB_APP_URL = "วาง_URL_ของ_GAS_ที่นี่";
+    const apiKey = ""; 
 
     let isMockMode = false;
     let currentUserEmail = "";
     let systemSchoolData = {};
-    let pendingEvidenceRecords = [];
+    
+    // คลังเก็บอินสแตนซ์ของกราฟแดชบอร์ด ป้องกันการเรนเดอร์ทับซ้อนเมื่อดึงสถิติใหม่
+    let activeCharts = {
+      chartDept: null,
+      chartLevel: null,
+      chartPercent: null
+    };
 
-    // 📦 ฐานข้อมูลจำลอง (Mock Data) สำหรับแสดงผลและสาธิตความสมบูรณ์
+    // 📦 ฐานข้อมูลจำลอง (Mock Data) สำหรับเปิดพรีวิวทันทีกรณีไม่มี API
     let schoolData = {
       departments: ['การบัญชี', 'การตลาด', 'การเลขานุการ', 'เทคโนโลยีธุรกิจดิจิทัล', 'คอมพิวเตอร์กราฟิก'],
       deptData: {
@@ -676,12 +793,6 @@
         'DBTech.2.1': 'ปวส.2',
         'DBTech.2.2': 'ปวส.2',
         'DBTech.3.1': 'ปวส.2'
-      },
-      subjectPeriods: {
-        'การบัญชี|ครูสมจิต ห่วงเรียน|30201-2001 บัญชีเบื้องต้น': 40,
-        'การบัญชี|ครูสมจิต ห่วงเรียน|30201-2005 บัญชีต้นทุน': 36,
-        'เทคโนโลยีธุรกิจดิจิทัล|ครูปภาพัส สมองดี|30204-2001 การพัฒนาเว็บไซต์': 40,
-        'เทคโนโลยีธุรกิจดิจิทัล|ครูปภาพัส สมองดี|30204-2002 การตลาดออนไลน์': 32
       },
       studentsByRoom: {
         'คพ.2.1': [
@@ -712,17 +823,114 @@
       historyMissedMap: {
         'ครูสมจิต ห่วงเรียน|30201-2001 บัญชีเบื้องต้น|คพ.2.1|นางสาววิภาดา ดั่งใจ': 4, 
         'ครูปภาพัส สมองดี|30204-2001 การพัฒนาเว็บไซต์|DBTech.2.1|นายกิตติคุณ มั่งมี': 6 
-      }
+      },
+      rawHistoryLogs: [
+        { teacher: 'ครูสมจิต ห่วงเรียน', department: 'การบัญชี', subject: '30201-2001 บัญชีเบื้องต้น', room: 'คพ.2.1', student: 'นางสาววิภาดา ดั่งใจ', phase: 'ครั้งที่ 1', missed: 4, total: 40, percent: 10, reason: 'ลากิจ' },
+        { teacher: 'ครูปภาพัส สมองดี', department: 'เทคโนโลยีธุรกิจดิจิทัล', subject: '30204-2001 การพัฒนาเว็บไซต์', room: 'DBTech.2.1', student: 'นายกิตติคุณ มั่งมี', phase: 'ครั้งที่ 2', missed: 6, total: 40, percent: 15, reason: 'ขาดเรียน' },
+        { teacher: 'ครูสมจิต ห่วงเรียน', department: 'การบัญชี', subject: '30201-2001 บัญชีเบื้องต้น', room: 'คพ.2.1', student: 'นายสัจจะ เจริญพร', phase: 'ครั้งที่ 1', missed: 5, total: 40, percent: 12.5, reason: 'ป่วย' }
+      ],
+      currentSemester: '1',
+      currentYear: '2569'
     };
 
-    let rawPendingRecords = [
-      { row: 2, timestamp: '08/06/2026 10:00', teacher: 'ครูสมจิต ห่วงเรียน', department: 'การบัญชี', subject: '30201-2001 บัญชีเบื้องต้น', room: 'คพ.2.1', student: 'นางสาววิภาดา ดั่งใจ', level: 'ครั้งที่ 1', missed: 4, total: 40, percent: 0.10 },
-      { row: 3, timestamp: '08/06/2026 11:15', teacher: 'ครูปภาพัส สมองดี', department: 'เทคโนโลยีธุรกิจดิจิทัล', subject: '30204-2001 การพัฒนาเว็บไซต์', room: 'DBTech.2.1', student: 'นายกิตติคุณ มั่งมี', level: 'ครั้งที่ 2', missed: 6, total: 40, percent: 0.15 }
-    ];
+    // ฟังก์ชันแสดงข้อความจำลอง Alert แทนคำสั่งอันเดิมเพื่อป้องกันการบล็อกเฟรม
+    function showModalAlert(msg) {
+      document.getElementById('customAlertBody').innerHTML = msg.replace(/\n/g, '<br>');
+      const alertMdl = new bootstrap.Modal(document.getElementById('customAlertModal'));
+      alertMdl.show();
+    }
 
-    // เช็กสถานะการตั้งค่าพารามิเตอร์ GAS URL หากยังไม่ใส่ให้รันเป็น Mock Preview จำลองแทน
+    // =========================================================
+    // ✨ ส่วนเสริม: ฟังก์ชันเรียกใช้ Gemini API 
+    // =========================================================
+    async function callGeminiAPI(promptText) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: promptText }] }]
+      };
+
+      let retries = 5;
+      let delay = 1000;
+      for (let i = 0; i < retries; i++) {
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          return data.candidates[0].content.parts[0].text;
+        } catch (error) {
+          if (i === retries - 1) {
+            console.error("Gemini API Error:", error);
+            return null;
+          }
+          await new Promise(res => setTimeout(res, delay));
+          delay *= 2;
+        }
+      }
+    }
+
+    async function generateDashboardInsight() {
+      const insightDiv = document.getElementById('aiInsightResult');
+      const btn = document.getElementById('btnGenerateInsight');
+      
+      const studentsCount = document.getElementById('kpiUniqueStudents').innerText;
+      const subjectsCount = document.getElementById('kpiUniqueSubjects').innerText;
+      const teachersCount = document.getElementById('kpiUniqueTeachers').innerText;
+      
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังวิเคราะห์...';
+      insightDiv.innerHTML = '<span class="text-primary"><i class="fas fa-circle-notch fa-spin"></i> Gemini กำลังประมวลผลข้อมูลสถิติ...</span>';
+
+      const prompt = `ในฐานะผู้เชี่ยวชาญด้านการจัดการศึกษา โปรดวิเคราะห์ข้อมูลภาพรวมการขาดเรียนต่อไปนี้อย่างมืออาชีพ และให้ข้อเสนอแนะสั้นๆ 2-3 ข้อ (ความยาวไม่เกิน 4 บรรทัด) เพื่อช่วยให้ผู้บริหารวิทยาลัยแก้ปัญหานักเรียนขาดเรียนได้ดีขึ้น:
+      - จำนวนนักเรียนที่ถูกตักเตือนเรื่องเวลาเรียน: ${studentsCount} คน
+      - จากรายวิชาที่ถูกรายงานทั้งหมด: ${subjectsCount} วิชา
+      - รายงานโดยครูจำนวน: ${teachersCount} ท่าน`;
+
+      const responseText = await callGeminiAPI(prompt);
+      
+      if (responseText) {
+        insightDiv.innerHTML = `<div class="text-dark"><strong>✨ บทวิเคราะห์เชิงลึกจาก Gemini:</strong><br>${responseText.replace(/\n/g, '<br>')}</div>`;
+      } else {
+        insightDiv.innerHTML = '<span class="text-danger">❌ เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI โปรดลองใหม่อีกครั้ง</span>';
+      }
+      
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-magic"></i> สรุปข้อมูลด้วย AI ✨';
+    }
+
+    async function generateMemoAdvice() {
+      const opinionBox = document.querySelector('#previewMemoContainer .opinion-box');
+      if (!opinionBox) return;
+
+      const btn = document.getElementById('btnMemoAdvice');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังร่าง...';
+
+      const listData = documentMemosGroup[currentPreviewLevelKey] || [];
+      const reasons = listData.map(st => st.reason).join(', ');
+
+      const prompt = `คุณคือหัวหน้างานครูที่ปรึกษา วิทยาลัยพณิชยการเชตุพน โปรดเขียน "ความคิดเห็นหัวหน้างานครูที่ปรึกษา" ความยาวไม่เกิน 3 บรรทัด เพื่อพิจารณาสั่งการให้ครูที่ปรึกษาติดตามนักศึกษาที่ขาดเรียนจากสาเหตุต่อไปนี้อย่างใกล้ชิด: "${reasons}"
+      ให้เขียนในรูปแบบที่เป็นทางการ กระชับ เหมาะสำหรับใส่ในหนังสือราชการ (บันทึกข้อความ)`;
+
+      const responseText = await callGeminiAPI(prompt);
+
+      if (responseText) {
+        opinionBox.innerHTML = `<b>ความคิดเห็นหัวหน้างานครูที่ปรึกษา</b><br>${responseText.replace(/\n/g, '<br>')}<br>อื่นๆ.....................................................................................................................................................`;
+      } else {
+        showModalAlert('❌ ไม่สามารถเชื่อมต่อกับ AI เพื่อสร้างข้อความได้ในขณะนี้');
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+
+    // ตรวจจับสเตตัสเริ่มต้น
     window.addEventListener('DOMContentLoaded', () => {
-      if (GAS_WEB_APP_URL === "AKfycbxsXWRYVb534NjGwW8VzvGQIBUVdIPSaOsnzj9PfRcvUf6RBqBb-kbTtnX4njae2c75" || GAS_WEB_APP_URL.trim() === "") {
+      if (GAS_WEB_APP_URL === "AKfycbw4bXs8iiVQNr2oWuLWiiIn3kfPgH8Ntt-XPUkEEZV7UiGRpO3qgP1iwoiEfac5OUgv" || GAS_WEB_APP_URL.trim() === "") {
         isMockMode = true;
         document.getElementById('gasUrlWarning').style.display = 'block';
       }
@@ -765,7 +973,7 @@
       } catch (err) {
         hideLoader();
         console.error("API Error: ", err);
-        alert("❌ ไม่สามารถดึงข้อมูลได้: โปรดตรวจสอบการตั้งค่า Apps Script CORS Web App URL");
+        showModalAlert("❌ ไม่สามารถดึงข้อมูลได้: โปรดตรวจสอบการตั้งค่า Apps Script CORS Web App URL\n(ระบบถูกปรับเป็นโหมดจำลองพรีวิวชั่วคราว)");
         isMockMode = true;
         document.getElementById('gasUrlWarning').style.display = 'block';
         return simulateMockResponse(action, payloadData);
@@ -774,7 +982,7 @@
 
     async function verifyAndLoginUser() {
       const email = document.getElementById('loginEmailInput').value.trim();
-      if (!email) { alert("กรุณาระบุบัญชีอีเมลก่อนเข้าใช้งานครับ"); return; }
+      if (!email) { showModalAlert("กรุณาระบุบัญชีอีเมลก่อนเข้าใช้งานครับ"); return; }
 
       currentUserEmail = email;
       bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
@@ -803,7 +1011,7 @@
       if (accessRes.isAdmin) {
         document.getElementById('adminTabLi').style.display = 'block';
       } else {
-        document.getElementById('adminTabLi').style.none;
+        document.getElementById('adminTabLi').style.display = 'none';
       }
 
       await loadSystemData();
@@ -827,6 +1035,9 @@
       const resData = await requestApi('getSchoolData');
       if (resData) {
         systemSchoolData = resData;
+        
+        document.getElementById('currentSemesterYearBadge').innerText = `ภาคเรียนที่ ${toThaiNumerals(resData.currentSemester)} ปีการศึกษา ${toThaiNumerals(resData.currentYear)}`;
+
         const ds = document.getElementById('deptSelect');
         ds.innerHTML = '<option value="">-- เลือกแผนก --</option>';
         resData.departments.forEach(d => ds.innerHTML += `<option value="${d}">${d}</option>`);
@@ -834,9 +1045,167 @@
         const csvDept = document.getElementById('csvDeptSelect');
         csvDept.innerHTML = '<option value="">-- เลือกแผนกวิชา --</option>';
         resData.departments.forEach(d => csvDept.innerHTML += `<option value="${d}">${d}</option>`);
+
+        // เรนเดอร์แดชบอร์ดทันทีเมื่อดึงข้อมูลเสร็จ
+        renderDashboardCharts();
       }
     }
 
+    // =========================================================
+    // 📊 ตรรกะระบบแดชบอร์ดวิเคราะห์ (Dashboard Engine - กลับมากราฟแท่งดั้งเดิม)
+    // =========================================================
+    function renderDashboardCharts() {
+      const logs = systemSchoolData.rawHistoryLogs || [];
+      
+      // 1. คำนวณค่าตัวเลขสรุปใน KPI Cards (ตรวจสอบการนับศิษย์แบบไม่ซ้ำคน/วิชา)
+      const uniqueSubjectsSet = new Set(logs.map(l => l.subject));
+      const uniqueTeachersSet = new Set(logs.map(l => l.teacher));
+      const uniqueStudentsSet = new Set(logs.map(l => `${l.student}|${l.room}`));
+
+      document.getElementById('kpiUniqueSubjects').innerText = toThaiNumerals(uniqueSubjectsSet.size);
+      document.getElementById('kpiUniqueTeachers').innerText = toThaiNumerals(uniqueTeachersSet.size);
+      document.getElementById('kpiUniqueStudents').innerText = toThaiNumerals(uniqueStudentsSet.size);
+
+      // --- เตรียมข้อมูลสำหรับกราฟที่ 1: แยกตามแผนกวิชา ---
+      const deptCounts = {};
+      const deptStudents = {};
+      
+      systemSchoolData.departments.forEach(d => {
+        deptCounts[d] = 0;
+        deptStudents[d] = new Set();
+      });
+
+      logs.forEach(l => {
+        if (deptStudents[l.department]) {
+          deptStudents[l.department].add(`${l.student}|${l.room}`);
+        }
+      });
+
+      Object.keys(deptStudents).forEach(d => {
+        deptCounts[d] = deptStudents[d].size;
+      });
+
+      // --- เตรียมข้อมูลสำหรับกราฟที่ 2: แยกตามชั้นปี ---
+      const levelCounts = { 'ปวช.1': 0, 'ปวช.2': 0, 'ปวช.3': 0, 'ปวส.1': 0, 'ปวส.2': 0 };
+      const levelStudents = { 'ปวช.1': new Set(), 'ปวช.2': new Set(), 'ปวช.3': new Set(), 'ปวส.1': new Set(), 'ปวส.2': new Set() };
+
+      logs.forEach(l => {
+        const mappedLevel = systemSchoolData.roomToLevel[l.room] || 'ปวช.1';
+        if (levelStudents[mappedLevel]) {
+          levelStudents[mappedLevel].add(`${l.student}|${l.room}`);
+        }
+      });
+
+      Object.keys(levelStudents).forEach(lvl => {
+        levelCounts[lvl] = levelStudents[lvl].size;
+      });
+
+      // --- เตรียมข้อมูลสำหรับกราฟที่ 3: เปอร์เซ็นต์ขาดเรียนสะสมเฉลี่ย ---
+      const deptPercentSum = {};
+      const deptPercentCount = {};
+      const levelPercentSum = { 'ปวช.1': 0, 'ปวช.2': 0, 'ปวช.3': 0, 'ปวส.1': 0, 'ปวส.2': 0 };
+      const levelPercentCount = { 'ปวช.1': 0, 'ปวช.2': 0, 'ปวช.3': 0, 'ปวส.1': 0, 'ปวส.2': 0 };
+
+      systemSchoolData.departments.forEach(d => {
+        deptPercentSum[d] = 0;
+        deptPercentCount[d] = 0;
+      });
+
+      logs.forEach(l => {
+        const pct = parseFloat(l.percent) || 0;
+        if (deptPercentCount[l.department] !== undefined) {
+          deptPercentSum[l.department] += pct;
+          deptPercentCount[l.department]++;
+        }
+        const mappedLvl = systemSchoolData.roomToLevel[l.room] || 'ปวช.1';
+        if (levelPercentCount[mappedLvl] !== undefined) {
+          levelPercentSum[mappedLvl] += pct;
+          levelPercentCount[mappedLvl]++;
+        }
+      });
+
+      const avgDeptPercents = systemSchoolData.departments.map(d => {
+        return deptPercentCount[d] > 0 ? parseFloat((deptPercentSum[d] / deptPercentCount[d]).toFixed(2)) : 0;
+      });
+
+      const avgLevelPercents = Object.keys(levelPercentCount).map(lvl => {
+        return levelPercentCount[lvl] > 0 ? parseFloat((levelPercentSum[lvl] / levelPercentCount[lvl]).toFixed(2)) : 0;
+      });
+
+      // --- สร้าง/อัปเดตกราฟที่ 1 (Bar) ด้วย ChartJS ---
+      if (activeCharts.chartDept) activeCharts.chartDept.destroy();
+      const ctx1 = document.getElementById('chartDeptAbsences').getContext('2d');
+      activeCharts.chartDept = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: systemSchoolData.departments,
+          datasets: [{
+            label: 'จำนวนเด็กโดนตักเตือน (คน)',
+            data: systemSchoolData.departments.map(d => deptCounts[d]),
+            backgroundColor: '#0d6efd',
+            borderRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { bodyFont: { family: 'Sarabun' }, titleFont: { family: 'Sarabun' } } }
+        }
+      });
+
+      // --- สร้าง/อัปเดตกราฟที่ 2 (Doughnut) ด้วย ChartJS ---
+      if (activeCharts.chartLevel) activeCharts.chartLevel.destroy();
+      const ctx2 = document.getElementById('chartLevelAbsences').getContext('2d');
+      activeCharts.chartLevel = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(levelCounts),
+          datasets: [{
+            data: Object.values(levelCounts),
+            backgroundColor: ['#ffc107', '#198754', '#dc3545', '#0dcaf0', '#6f42c1']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right', labels: { font: { family: 'Sarabun' } } },
+            tooltip: { bodyFont: { family: 'Sarabun' }, titleFont: { family: 'Sarabun' } }
+          }
+        }
+      });
+
+      // --- สร้าง/อัปเดตกราฟที่ 3 (Bar) ด้วย ChartJS ---
+      if (activeCharts.chartPercent) activeCharts.chartPercent.destroy();
+      const ctx3 = document.getElementById('chartAverageAbsencePercent').getContext('2d');
+      activeCharts.chartPercent = new Chart(ctx3, {
+        type: 'bar',
+        data: {
+          labels: systemSchoolData.departments.concat(Object.keys(levelCounts)),
+          datasets: [{
+            label: 'อัตราการขาดเรียนสะสมเฉลี่ยของแผนกและชั้นปี (%)',
+            data: avgDeptPercents.concat(avgLevelPercents),
+            backgroundColor: '#fd7e14',
+            borderRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { tooltip: { bodyFont: { family: 'Sarabun' }, titleFont: { family: 'Sarabun' } } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100
+            }
+          }
+        }
+      });
+    }
+
+    // =========================================================
+    // 📝 ตรรกะฟังก์ชันบันทึกข้อมูลและวิเคราะห์ผู้เรียน (Tab 2)
+    // =========================================================
     function onDeptChange() {
       const dept = document.getElementById('deptSelect').value;
       const ts = document.getElementById('teacherSelect');
@@ -860,32 +1229,23 @@
       }
     }
 
+    // ฟังก์ชันนี้จะแสดงรายการห้องเรียน (ลบการเซ็ตจำนวนคาบอัตโนมัติออก)
     function onSubjectChange() {
       const dept = document.getElementById('deptSelect').value;
       const teacher = document.getElementById('teacherSelect').value;
       const subject = document.getElementById('subjectSelect').value;
-      const tp = document.getElementById('totalPeriods');
       
       const container = document.getElementById('roomCheckboxGroup');
       container.innerHTML = '';
       document.getElementById('studentSection').style.display = 'none';
       
       if (subject) {
-        const pKey = `${dept}|${teacher}|${subject}`;
-        const totalPeriods = systemSchoolData.subjectPeriods[pKey] || 0;
-        tp.value = totalPeriods;
-
-        if (totalPeriods > 0) {
-          const rooms = systemSchoolData.deptData[dept][teacher][subject];
-          rooms.forEach(rm => {
-            container.innerHTML += `<div class="form-check form-check-inline"><input class="form-check-input room-chk" type="checkbox" value="${rm}" id="chk_${rm}" onchange="showStudentsMulti()"><label class="form-check-label" for="chk_${rm}">${rm}</label></div>`;
-          });
-          showStudentsMulti();
-        } else {
-          container.innerHTML = '<small class="text-danger"><i class="fas fa-exclamation-triangle"></i> ไม่พบจำนวนคาบในฐานข้อมูลหลัก (กรุณาตรวจในแผ่นงานของแอดมิน)</small>';
-        }
+        const rooms = systemSchoolData.deptData[dept][teacher][subject] || [];
+        rooms.forEach(rm => {
+          container.innerHTML += `<div class="form-check form-check-inline"><input class="form-check-input room-chk" type="checkbox" value="${rm}" id="chk_${rm}" onchange="showStudentsMulti()"><label class="form-check-label" for="chk_${rm}">${rm}</label></div>`;
+        });
+        showStudentsMulti();
       } else {
-        tp.value = '';
         container.innerHTML = '<small class="text-muted">กรุณาเลือกวิชาเรียนก่อน...</small>';
       }
     }
@@ -900,7 +1260,13 @@
       document.getElementById('studentSection').style.display = 'none';
     }
 
-    // แสดงรายชื่อพร้อมตัวกรองและระบบเลือกส่งรายงาน
+    function updateAllStudentPercents() {
+      const totalPeriods = parseInt(document.getElementById('totalPeriods').value) || 0;
+      document.querySelectorAll('.missed-input').forEach(input => {
+        calcPercent(input, totalPeriods);
+      });
+    }
+
     function showStudentsMulti() {
       const teacher = document.getElementById('teacherSelect').value;
       const subject = document.getElementById('subjectSelect').value;
@@ -911,7 +1277,7 @@
       
       list.innerHTML = ''; 
       
-      if (checkedRooms.length === 0 || totalPeriods <= 0) { 
+      if (checkedRooms.length === 0) { 
         document.getElementById('studentSection').style.display = 'none'; 
         return; 
       }
@@ -927,7 +1293,6 @@
           const mLevel = systemSchoolData.historyMap[hKey] || 0;
           const prevMissed = systemSchoolData.historyMissedMap[hKey] || 0;
           
-          // ตรวจสอบประวัติการส่งรายงานในอดีตเฉพาะหัวข้อรอบที่เลือกไว้
           let isReportedInThisPhase = false;
           if (currentPhase === "ครั้งที่ 1" && mLevel >= 1) isReportedInThisPhase = true;
           if (currentPhase === "ครั้งที่ 2" && mLevel >= 2) isReportedInThisPhase = true;
@@ -950,7 +1315,7 @@
               <div class="col-6 col-md-3">
                 <div class="input-group input-group-sm">
                   <span class="input-group-text">ขาดเรียนสะสม (คาบ)</span>
-                  <input type="number" class="form-control missed-input" min="0" data-prev-missed="${prevMissed}" oninput="calcPercent(this, ${totalPeriods})" placeholder="ระบุคาบ">
+                  <input type="number" class="form-control missed-input" min="0" data-prev-missed="${prevMissed}" oninput="calcPercent(this, parseInt(document.getElementById('totalPeriods').value) || 0)" placeholder="ระบุคาบ">
                 </div>
               </div>
               <div class="col-6 col-md-2 text-center">
@@ -971,13 +1336,27 @@
 
     function calcPercent(inputEl, totalPeriods) {
       const missed = parseFloat(inputEl.value) || 0;
+      const prevMissed = parseFloat(inputEl.getAttribute('data-prev-missed')) || 0;
       const row = inputEl.closest('.student-item');
       const badge = row.querySelector('.percent-badge');
       const checkbox = row.querySelector('.report-student-check');
       
-      // ออโต้เลือกติ๊กนักเรียนถ้าคุณครูป้อนคาบเรียนที่ขาดมากกว่า 0 คาบ
       if (missed > 0) {
         checkbox.checked = true;
+      } else {
+        checkbox.checked = false;
+      }
+
+      if (missed > 0 && missed < prevMissed) {
+        inputEl.classList.add('is-invalid');
+        badge.innerText = "0%";
+        badge.className = "badge bg-danger w-100 p-2 percent-badge";
+        showModalAlert(`❌ ผิดพลาดของข้อมูล: จำนวนคาบเรียนที่ขาดล่าสุด (${missed} คาบ) จะต้องไม่น้อยกว่าประวัติแจ้งสะสมเดิมของนักเรียนคนนี้ (${prevMissed} คาบ)`);
+        inputEl.value = prevMissed; 
+        calcPercent(inputEl, totalPeriods);
+        return;
+      } else {
+        inputEl.classList.remove('is-invalid');
       }
 
       let pct = 0;
@@ -1002,13 +1381,13 @@
     // =========================================================
     // 🖨️ ระบบสร้างและคัดแยกหน้าบันทึกข้อความ WYSIWYG
     // =========================================================
-    let documentMemosGroup = {}; // กลุ่มสำหรับแยกหน้าพรีวิวและพิมพ์
-    let currentPreviewLevelKey = ""; // หน้าการแจ้งเตือนที่แสดงอยู่ในพรีวิวโมดอล
+    let documentMemosGroup = {};
+    let currentPreviewLevelKey = "";
 
     async function validateAndOpenSummary() {
       const totalPeriods = document.getElementById('totalPeriods').value;
       if (!totalPeriods || totalPeriods <= 0) {
-        alert("ไม่พบจำนวนคาบเรียนทั้งหมดในรายวิชานี้");
+        showModalAlert("⚠️ กรุณาระบุจำนวนคาบเรียนรวมทั้งหมด (ทั้งเทอม) ด้วยตนเองเพื่อคำนวณร้อยละ");
         return;
       }
 
@@ -1017,7 +1396,6 @@
       let hasError = false;
       const currentPhase = document.getElementById('reportPhaseSelect').value;
 
-      // ล้างคลังจัดกลุ่มเก่า
       documentMemosGroup = {
         "ครั้งที่ 1": [],
         "ครั้งที่ 2": []
@@ -1039,7 +1417,7 @@
             const missed = parseFloat(missedInput.value) || 0;
 
             if(!missedInput.value || missed <= 0) {
-              alert(`กรุณากรอกจำนวนคาบที่ขาดเรียนจริงของ ${studentName}`);
+              showModalAlert(`กรุณากรอกจำนวนคาบที่ขาดเรียนจริงของ ${studentName}`);
               hasError = true;
               return;
             }
@@ -1063,7 +1441,7 @@
       });
 
       if (hasError) return;
-      if (count === 0) { alert('⚠️ กรุณาเลือกติ๊กถูกรายชื่อนักเรียนและระบุคาบขาดเรียนที่ต้องการรายงานอย่างน้อย 1 รายการก่อน'); return; }
+      if (count === 0) { showModalAlert('⚠️ กรุณาเลือกติ๊กถูกรายชื่อนักเรียนและระบุคาบขาดเรียนที่ต้องการรายงานอย่างน้อย 1 รายการก่อน'); return; }
 
       const rawFormData = {
         deptName: document.getElementById('deptSelect').value,
@@ -1073,19 +1451,15 @@
         evaluations: [{ room: "รวมกลุ่ม", absentList: evaluations }]
       };
 
-      // บันทึกรายงานเข้าฐานข้อมูลผ่าน Web API
       const saveRes = await requestApi('saveData', { formData: rawFormData });
       if (saveRes && saveRes.status === 'success') {
-        alert("🎉 บันทึกเวลาเรียนลง Google Sheets สำเร็จ!");
-        
-        // จัดทำระบบ Dropdown และหน้าพรีวิวแบบสลับหน้ารายบุคคล/กลุ่มใบ
+        showModalAlert("🎉 บันทึกเวลาเรียนลงระบบ สำเร็จ!");
         setupPreviewPageSelector();
       } else {
-        alert("❌ บันทึกฐานข้อมูลล้มเหลว: " + (saveRes ? saveRes.message : "ระบบขัดข้อง"));
+        showModalAlert("❌ บันทึกฐานข้อมูลล้มเหลว: " + (saveRes ? saveRes.message : "ระบบขัดข้อง"));
       }
     }
 
-    // สร้างเมนูสลับหน้าสำหรับการพรีวิวใน Modal
     function setupPreviewPageSelector() {
       const selector = document.getElementById('previewPageSelect');
       selector.innerHTML = "";
@@ -1111,34 +1485,12 @@
         document.getElementById('previewPageSelectorWrapper').classList.add('hidden');
       }
 
-      // เปิดหน้าพรีวิวแรก
       switchPreviewPage(firstAvailableKey);
       
       const previewModal = new bootstrap.Modal(document.getElementById('printPreviewModal'));
       previewModal.show();
     }
 
-    // ฟังก์ชันย่อยสำหรับสกัดดึง "รหัสวิชา" และ "ชื่อวิชา" ออกจากตัวอักษรกล่องรายวิชาเดี่ยว
-    function extractSubjectInfo(subjectStr) {
-      if (!subjectStr) {
-        return { code: "................................", name: "................................" };
-      }
-      // ตรวจสอบโครงสร้าง: รหัสวิชา (เช่น xxxx-xxxxx หรือ xxxxx-xxxx) นำหน้าด้วยตัวเลข และตามด้วยชื่อรายวิชา
-      const codeRegex = /^([0-9]+-[0-9]+(-[0-9]+)?)\s*(.*)$/;
-      const match = subjectStr.match(codeRegex);
-      if (match) {
-        return {
-          code: match[1],
-          name: match[3].trim()
-        };
-      }
-      return {
-        code: "................................",
-        name: subjectStr
-      };
-    }
-
-    // เปลี่ยนแปลงข้อมูลในหน้าพรีวิวกระดาษเมื่อกดย้ายหน้า Dropdown
     function switchPreviewPage(levelKey) {
       currentPreviewLevelKey = levelKey;
       const listData = documentMemosGroup[levelKey];
@@ -1149,13 +1501,9 @@
       const subjectRaw = document.getElementById('subjectSelect').value;
       const totalPeriods = document.getElementById('totalPeriods').value;
 
-      // สกัดรหัสวิชาและชื่อวิชาที่สะอาดเรียบร้อย
       const subjectInfo = extractSubjectInfo(subjectRaw);
-      
-      // แปลงรหัสวิชาเป็นเลขไทย
       const thaiSubjectCode = toThaiNumerals(subjectInfo.code);
 
-      // ดึงระดับการศึกษาและปีการศึกษาจากชื่อห้องของนักเรียนคนแรกอย่างชาญฉลาดผ่าน roomToLevel
       const firstStudent = listData[0];
       const roomKey = firstStudent.room;
       const mappingLevelStr = systemSchoolData.roomToLevel && systemSchoolData.roomToLevel[roomKey] 
@@ -1188,7 +1536,6 @@
         `;
       });
 
-      // ดึงฟอร์มเอกสารทางการ 8 คอลัมน์ที่แก้ไขแบบ WYSIWYG ได้ครบถ้วนสมบูรณ์ และจัดหน้าอย่างสมดุล (แก้ช่องว่างด้านหน้าตามความต้องการ)
       const templateHtml = `
         <table style="width:100%; border-collapse:collapse;">
           <tr>
@@ -1208,8 +1555,8 @@
 
         <div class="salutation" style="font-size: 16pt; margin-bottom: 15px;"><span class="salutation-label" style="font-weight: bold; font-size: 18pt;">เรียน</span>&nbsp;&nbsp;หัวหน้างานครูที่ปรึกษา</div>
         
-        <div class="lead-text" style="text-indent: 1.5cm; text-align: justify; line-height: 1;">
-          ตามที่ข้าพเจ้าได้รับมองหมายให้จัดการเรียนการสอนนักเรียนนักศึกษา ระดับ<span contenteditable="true" style="text-indent: 0.1cm;"><b>${derivedLevel}</b></span>ชั้นปีที่<span contenteditable="true" style="text-indent: 0.1cm;"><b>${thaiDerivedYear}</b></span><br>สาขาวิชา<span contenteditable="true" style="text-indent: 0.1cm;"><b>${deptName}</b></span>จึงขอรายงานการขาดเรียนของนักเรียนนักศึกษา รหัสวิชา<span contenteditable="true" style="text-indent: 0.1cm;"><b>${thaiSubjectCode}</b></span>รายวิชา<span contenteditable="true" style="text-indent: 0.1cm;"><b>${subjectInfo.name}</b></span>รายชื่อดังต่อไปนี้
+        <div class="lead-text" style="text-indent: 1.5cm; text-align: justify; line-height: 1.25;">
+          ตามที่ข้าพเจ้าได้รับมอบหมายให้จัดการเรียนการสอนนักเรียนนักศึกษา ระดับ<span contenteditable="true" style="text-indent: 0.1cm;"><b>${derivedLevel}</b></span>ชั้นปีที่<span contenteditable="true" style="text-indent: 0.1cm;"><b>${thaiDerivedYear}</b></span>สาขาวิชา<span contenteditable="true" style="text-indent: 0.1cm;"><b>${deptName}</b></span>จึงขอรายงานการขาดเรียนของนักเรียนนักศึกษา รหัสวิชา<span contenteditable="true" style="text-indent: 0.1cm;"><b>${thaiSubjectCode}</b></span>รายวิชา<span contenteditable="true" style="text-indent: 0.1cm;"><b>${subjectInfo.name}</b></span>รายชื่อดังต่อไปนี้
         </div>
 
         <table class="report-table">
@@ -1256,15 +1603,49 @@
         </div>
       `;
 
-      // เขียนเอกสารใส่กล่องพรีวิวและปริ้นท์
       document.getElementById('previewMemoContainer').innerHTML = templateHtml;
       document.getElementById('printedMemoContainer').innerHTML = templateHtml;
       
-      // อัปเดตทูลบาร์ให้เข้ากับเอกสารใหม่
       updateToolbarUIState();
     }
 
-    // ชุดคำสั่งจัดฟอร์แมตเอกสาร Word (WYSIWYG) ในพรีวิวบอร์ด
+    function triggerToggleSemesterAndPromote() {
+      const confirmText = prompt("⚠️ ระบบจะล้างตารางวิชาทั้งหมด และเลื่อนระดับชั้นปีนักศึกษาขึ้น 1 ระดับชั้นปี\nกรุณาป้อนรหัสคำว่า 'PROMOTE' ยืนยันการทำงาน:");
+      if (confirmText !== "PROMOTE") {
+        showModalAlert("ทำรายการยกเลิก: ยืนยันรหัสควบคุมสิทธิ์แอดมินไม่ถูกต้อง");
+        return;
+      }
+      
+      showLoader("กำลังประมวลผลเปลี่ยนปีการศึกษาและเคลียร์วิชาเรียน...");
+      
+      requestApi('toggleSemester').then(res => {
+        if (res && res.status === 'success') {
+          showModalAlert(res.message);
+          loadSystemData();
+        } else {
+          showModalAlert("❌ เกิดข้อผิดพลาด: " + (res ? res.message : "แอดมินจำกัดสิทธิ์"));
+        }
+      });
+    }
+
+    function extractSubjectInfo(subjectStr) {
+      if (!subjectStr) {
+        return { code: "................................", name: "................................" };
+      }
+      const codeRegex = /^([0-9]+-[0-9]+(-[0-9]+)?)\s*(.*)$/;
+      const match = subjectStr.match(codeRegex);
+      if (match) {
+        return {
+          code: match[1],
+          name: match[3].trim()
+        };
+      }
+      return {
+        code: "................................",
+        name: subjectStr
+      };
+    }
+
     function execEditorCmd(cmd, value = null) {
       document.execCommand(cmd, false, value);
       updateToolbarUIState();
@@ -1279,12 +1660,10 @@
       });
     }
 
-    // ผูกคำสั่งอัปเดตสเตตัสความเคลื่อนไหวเมื่อคลุมดำปรับฟอนต์
     document.getElementById('previewMemoContainer').addEventListener('keyup', updateToolbarUIState);
     document.getElementById('previewMemoContainer').addEventListener('mouseup', updateToolbarUIState);
 
     function triggerBrowserPrint() {
-      // เอาโฟกัสออกจากบอร์ดเพื่อความคมชัดและลบลายเส้นปะตอนพริ้นท์
       document.activeElement.blur();
       window.print();
     }
@@ -1294,267 +1673,16 @@
       onDeptChange();
     }
 
-    // =========================================================
-    // 🔗 ตรรกะฟังก์ชันแนบหลักฐานการตักเตือน (แท็บย่อยที่ 2)
-    // =========================================================
-    function renderEvidenceTab() {
-      onEvidenceTabActive();
+    function downloadDeptTemplate() {
+      const headers = "แผนก,คำนำหน้า,ชื่อ,นามสกุล,วิชา,ห้อง";
+      const sample = "การบัญชี,นางสาว,ปภัสสร,นครไพร,30201-2001 บัญชีเบื้องต้น,คพ.2.1";
+      triggerCsvDownload("Template_รายวิชา_เชตุพน.csv", headers, sample);
     }
 
-    function onEvidenceTabActive() {
-      document.getElementById('evidenceDeptSelect').innerHTML = '<option value="">-- เลือกแผนกวิชา --</option>';
-      document.getElementById('evidenceTeacherSelect').innerHTML = '<option value="">-- เลือกครู --</option>';
-      document.getElementById('evidenceSubjectSelect').innerHTML = '<option value="">-- เลือกวิชา --</option>';
-      document.getElementById('evidenceRoomSelect').innerHTML = '<option value="">-- เลือกห้องเรียน --</option>';
-      
-      document.getElementById('evidenceTeacherSelect').disabled = true;
-      document.getElementById('evidenceSubjectSelect').disabled = true;
-      document.getElementById('evidenceRoomSelect').disabled = true;
-      
-      document.getElementById('pendingEvidenceList').innerHTML = '<div class="text-center p-5 text-muted"><i class="fas fa-arrow-up fa-2x mb-3 text-primary"></i><br>กรุณาค้นหาและเลือกข้อมูลเงื่อนไขด้านบนเพื่อแนบหลักฐาน</div>';
-
-      const depts = [];
-      rawPendingRecords.forEach(item => {
-        if (item.department && !depts.includes(item.department)) {
-          depts.push(item.department);
-        }
-      });
-
-      let deptHtml = '<option value="">-- เลือกแผนกวิชา --</option>';
-      depts.forEach(d => deptHtml += `<option value="${d}">${d}</option>`);
-      document.getElementById('evidenceDeptSelect').innerHTML = deptHtml;
-    }
-
-    function onEvidenceDeptChange() {
-      const selectedDept = document.getElementById('evidenceDeptSelect').value;
-      const teacherSelect = document.getElementById('evidenceTeacherSelect');
-      
-      teacherSelect.innerHTML = '<option value="">-- เลือกครู --</option>';
-      teacherSelect.disabled = !selectedDept;
-      
-      document.getElementById('evidenceSubjectSelect').innerHTML = '<option value="">-- เลือกวิชา --</option>';
-      document.getElementById('evidenceSubjectSelect').disabled = true;
-      document.getElementById('evidenceRoomSelect').innerHTML = '<option value="">-- เลือกห้องเรียน --</option>';
-      document.getElementById('evidenceRoomSelect').disabled = true;
-
-      if (!selectedDept) return;
-
-      const teachers = [];
-      pendingEvidenceRecords.forEach(item => {
-        if (item.department === selectedDept && !teachers.includes(item.teacher)) {
-          teachers.push(item.teacher);
-        }
-      });
-
-      let tHtml = '<option value="">-- เลือกครูผู้รายงาน --</option>';
-      teachers.forEach(t => tHtml += `<option value="${t}">${t}</option>`);
-      teacherSelect.innerHTML = tHtml;
-    }
-
-    function onEvidenceTeacherChange() {
-      const selectedDept = document.getElementById('evidenceDeptSelect').value;
-      const selectedTeacher = document.getElementById('evidenceTeacherSelect').value;
-      const subjectSelect = document.getElementById('evidenceSubjectSelect');
-      
-      subjectSelect.innerHTML = '<option value="">-- เลือกวิชา --</option>';
-      subjectSelect.disabled = !selectedTeacher;
-      
-      document.getElementById('evidenceRoomSelect').innerHTML = '<option value="">-- เลือกห้องเรียน --</option>';
-      document.getElementById('evidenceRoomSelect').disabled = true;
-
-      if (!selectedTeacher) return;
-
-      const subjects = [];
-      pendingEvidenceRecords.forEach(item => {
-        if (item.department === selectedDept && item.teacher === selectedTeacher && !subjects.includes(item.subject)) {
-          subjects.push(item.subject);
-        }
-      });
-
-      let sHtml = '<option value="">-- เลือกวิชา --</option>';
-      subjects.forEach(s => sHtml += `<option value="${s}">${s}</option>`);
-      subjectSelect.innerHTML = sHtml;
-    }
-
-    function onEvidenceSubjectChange() {
-      const selectedDept = document.getElementById('evidenceDeptSelect').value;
-      const selectedTeacher = document.getElementById('evidenceTeacherSelect').value;
-      const selectedSubj = document.getElementById('evidenceSubjectSelect').value;
-      const roomSelect = document.getElementById('evidenceRoomSelect');
-      
-      roomSelect.innerHTML = '<option value="">-- เลือกห้องเรียน --</option>';
-      roomSelect.disabled = !selectedSubj;
-
-      if (!selectedSubj) return;
-
-      const rooms = [];
-      pendingEvidenceRecords.forEach(item => {
-        if (item.department === selectedDept && item.teacher === selectedTeacher && item.subject === selectedSubj && !rooms.includes(item.room)) {
-          rooms.push(item.room);
-        }
-      });
-
-      let roomHtml = '<option value="">-- เลือกห้องเรียน --</option>';
-      rooms.forEach(rm => roomHtml += `<option value="${rm}">${rm}</option>`);
-      roomSelect.innerHTML = roomHtml;
-    }
-
-    function filterEvidenceList() {
-      const selectedDept = document.getElementById('evidenceDeptSelect').value;
-      const selectedTeacher = document.getElementById('evidenceTeacherSelect').value;
-      const selectedSubj = document.getElementById('evidenceSubjectSelect').value;
-      const selectedRoom = document.getElementById('evidenceRoomSelect').value;
-      const container = document.getElementById('pendingEvidenceList');
-
-      if (!selectedDept || !selectedTeacher || !selectedSubj || !selectedRoom) return;
-
-      const filtered = pendingEvidenceRecords.filter(item => 
-        item.department === selectedDept && 
-        item.teacher === selectedTeacher && 
-        item.subject === selectedSubj && 
-        item.room === selectedRoom
-      );
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="alert alert-success text-center py-3">🎉 แนบไฟล์หลักฐานของกลุ่มเรียนนี้ครบถ้วนหมดแล้วครับ!</div>`;
-        return;
-      }
-
-      let html = '<h6 class="mb-3 text-secondary"><i class="fas fa-user-clock"></i> รายชื่อนักเรียนรอแนบเอกสารหลักฐานตักเตือน</h6>';
-      filtered.forEach(item => {
-        const percentFormatted = (parseFloat(item.percent) * 100).toFixed(2) + '%';
-
-        html += `
-          <div class="card mb-3 shadow-sm evidence-item" id="ev_card_${item.row}">
-            <div class="card-body">
-              <div class="row align-items-center">
-                <div class="col-md-7">
-                  <h5 class="card-title text-primary mb-1">${item.student}</h5>
-                  <p class="card-text mb-1 text-muted" style="font-size:0.9rem;">
-                    <b>ห้อง:</b> ${item.room} <br>
-                    <b>ระดับการแจ้งเตือนล่าสุด:</b> <span class="badge ${item.level === 'แจ้ง ขร.' ? 'bg-danger' : 'bg-warning text-dark'}">${item.level}</span>
-                    (ขาดเรียน: ${item.missed}/${item.total} คาบ - <b class="text-danger">${percentFormatted}</b>) <br>
-                    <small><i class="fas fa-clock"></i> รายงานบันทึกเข้าระบบเมื่อ: ${item.timestamp}</small>
-                  </p>
-                </div>
-                <div class="col-md-5">
-                  <form onsubmit="handleEvidenceUpload(event, ${item.row}, '${item.student}')" class="d-flex flex-column gap-2">
-                    <input class="form-control form-control-sm" type="file" id="file_${item.row}" accept=".jpg,.jpeg,.png,.pdf" required>
-                    <button type="submit" class="btn btn-sm btn-info text-white" id="btn_${item.row}">
-                      <i class="fas fa-upload"></i> อัปโหลดรูปตักเตือน หรือ PDF
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-      container.innerHTML = html;
-    }
-
-    function handleEvidenceUpload(e, rowNum, studentName) {
-      e.preventDefault();
-      const fileInput = document.getElementById(`file_${rowNum}`);
-      const btn = document.getElementById(`btn_${rowNum}`);
-      const file = fileInput.files[0];
-      
-      if (!file) return;
-
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังเตรียมไฟล์หลักฐาน...';
-
-      if (file.type.startsWith('image/')) {
-        btn.innerHTML = '<i class="fas fa-compress"></i> กำลังย่อขนาดรูปภาพอัตโนมัติ...';
-        compressImage(file, 1000, 0.7, function(compressedBlob) {
-          const reader = new FileReader();
-          reader.onload = function(evt) {
-            const base64Data = evt.target.result.split(',')[1];
-            uploadEvidenceToServer(rowNum, base64Data, file.name, 'image/jpeg', studentName);
-          };
-          reader.readAsDataURL(compressedBlob);
-        });
-      } else {
-        if (file.size > 5 * 1024 * 1024) {
-          alert("ขนาดไฟล์เอกสารใหญ่เกินไป (ห้ามเกิน 5MB)");
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fas fa-upload"></i> ลองอีกครั้ง';
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          const base64Data = evt.target.result.split(',')[1];
-          uploadEvidenceToServer(rowNum, base64Data, file.name, file.type, studentName);
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    function compressImage(file, maxDimension, quality, callback) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height) {
-            if (width > maxDimension) {
-              height *= maxDimension / width;
-              width = maxDimension;
-            }
-          } else {
-            if (height > maxDimension) {
-              width *= maxDimension / height;
-              height = maxDimension;
-            }
-          }
-
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-
-          canvas.toBlob(function(blob) {
-            callback(blob);
-          }, 'image/jpeg', quality);
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    async function uploadEvidenceToServer(rowNum, base64Data, filename, mimeType, studentName) {
-      const btn = document.getElementById(`btn_${rowNum}`);
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังอัปโหลดเข้าระบบ...';
-
-      const uploadRes = await requestApi('saveEvidence', {
-        rowNum: rowNum,
-        base64Data: base64Data,
-        filename: filename,
-        mimeType: mimeType,
-        studentName: studentName
-      });
-
-      if (uploadRes && uploadRes.status === 'success') {
-        document.getElementById(`ev_card_${rowNum}`).innerHTML = `
-          <div class="card-body text-center text-success py-3">
-            <i class="fas fa-check-circle fa-lg mb-2"></i><br>
-            บันทึกไฟล์หลักฐาน (บีบอัดสำเร็จ) ของ <b>${studentName}</b> เสร็จเรียบร้อยแล้ว
-          </div>`;
-        
-        pendingEvidenceRecords = pendingEvidenceRecords.filter(item => item.row !== rowNum);
-        setTimeout(() => {
-          const card = document.getElementById(`ev_card_${rowNum}`);
-          if (card) card.remove();
-          filterEvidenceList();
-        }, 2000);
-      } else {
-        alert("❌ อัปโหลดไฟล์ล้มเหลว: " + (uploadRes ? uploadRes.message : "ระบบปฏิเสธคำขอ"));
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-upload"></i> ลองใหม่อีกครั้ง';
-      }
+    function downloadLevelTemplate() {
+      const headers = "ห้องเรียน,คำนำหน้า,ชื่อ,นามสกุล,เลขประจำตัว,ครูที่ปรึกษา";
+      const sample = "คพ.2.1,นาย,สมเกียรติ,ขยันเรียน,6620101,ครูสมใจ รักดี";
+      triggerCsvDownload("Template_รายชื่อนักเรียน_เชตุพน.csv", headers, sample);
     }
 
     function triggerCsvDownload(filename, headers, sampleRow) {
@@ -1570,25 +1698,13 @@
       document.body.removeChild(link);
     }
 
-    function downloadDeptTemplate() {
-      const headers = "แผนก,คำนำหน้า,ชื่อ,นามสกุล,วิชา,ห้อง,คาบทั้งหมด";
-      const sample = "การบัญชี,นางสาว,ปภัสสร,นครไพร,บัญชีเบื้องต้น,คพ.2.1,40";
-      triggerCsvDownload("Template_รายวิชา_เชตุพน.csv", headers, sample);
-    }
-
-    function downloadLevelTemplate() {
-      const headers = "ห้องเรียน,คำนำหน้า,ชื่อ,นามสกุล,เลขประจำตัว,ครูที่ปรึกษา";
-      const sample = "คพ.1.1,นาย,สมเกียรติ,ขยันเรียน,6620101,ครูสมใจ รักดี";
-      triggerCsvDownload("Template_รายชื่อนักเรียน_เชตุพน.csv", headers, sample);
-    }
-
-    async function uploadCsvDeptApi() {
+    async function uploadCsvDept() {
       const dept = document.getElementById('csvDeptSelect').value;
       const fileInput = document.getElementById('csvDeptFile');
       const file = fileInput.files[0];
 
-      if (!dept) { alert('กรุณาเลือกแผนกวิชาก่อนทำรายการครับ'); return; }
-      if (!file) { alert('กรุณาเลือกไฟล์ข้อมูล CSV รายวิชาก่อนครับ'); return; }
+      if (!dept) { showModalAlert('กรุณาเลือกแผนกวิชาก่อนทำรายการครับ'); return; }
+      if (!file) { showModalAlert('กรุณาเลือกไฟล์ข้อมูล CSV รายวิชาก่อนครับ'); return; }
 
       const reader = new FileReader();
       reader.onload = async function(e) {
@@ -1601,23 +1717,23 @@
         });
 
         if (res && res.status === 'success') {
-          alert(`🎉 สำเร็จ! นำเข้าโครงสร้างวิชาของแผนก ${dept} เรียบร้อยแล้ว`);
+          showModalAlert(`🎉 สำเร็จ! นำเข้าโครงสร้างวิชาของแผนก ${dept} เรียบร้อยแล้ว`);
           fileInput.value = '';
           await loadSystemData();
         } else {
-          alert("❌ เกิดข้อผิดพลาด: " + (res ? res.message : "ระบบตัดสิทธิ์นำเข้า"));
+          showModalAlert("❌ เกิดข้อผิดพลาด: " + (res ? res.message : "ระบบตัดสิทธิ์นำเข้า"));
         }
       };
       reader.readAsText(file, 'UTF-8');
     }
 
-    async function uploadCsvLevelApi() {
+    async function uploadCsvLevel() {
       const level = document.getElementById('csvLevelSelect').value;
       const fileInput = document.getElementById('csvLevelFile');
       const file = fileInput.files[0];
 
-      if (!level) { alert('กรุณาเลือกระดับชั้นก่อนทำรายการครับ'); return; }
-      if (!file) { alert('กรุณาเลือกไฟล์ CSV รายชื่อเด็กก่อนครับ'); return; }
+      if (!level) { showModalAlert('กรุณาเลือกระดับชั้นก่อนทำรายการครับ'); return; }
+      if (!file) { showModalAlert('กรุณาเลือกไฟล์ CSV รายชื่อเด็กก่อนครับ'); return; }
 
       const reader = new FileReader();
       reader.onload = async function(e) {
@@ -1630,11 +1746,11 @@
         });
 
         if (res && res.status === 'success') {
-          alert(`🎉 สำเร็จ! บันทึกไฟล์รายชื่อนักเรียนระดับชั้น ${level} ครบถ้วนเรียบร้อยแล้วครับ`);
+          showModalAlert(`🎉 สำเร็จ! บันทึกไฟล์รายชื่อนักเรียนระดับชั้น ${level} ครบถ้วนเรียบร้อยแล้วครับ`);
           fileInput.value = '';
           await loadSystemData();
         } else {
-          alert("❌ เกิดข้อผิดพลาด: " + (res ? res.message : "ไม่สามารถเขียนทับแผ่นงานได้"));
+          showModalAlert("❌ เกิดข้อผิดพลาด: " + (res ? res.message : "ไม่สามารถเขียนทับแผ่นงานได้"));
         }
       };
       reader.readAsText(file, 'UTF-8');
@@ -1652,14 +1768,10 @@
             });
           } else if (action === 'getSchoolData') {
             resolve(schoolData);
-          } else if (action === 'getPendingEvidence') {
-            resolve(rawPendingRecords);
           } else if (action === 'saveData') {
             resolve({ status: 'success' });
-          } else if (action === 'saveEvidence') {
-            resolve({ status: 'success', url: '#' });
-          } else if (action === 'promoteStudents') {
-            resolve({ status: 'success', message: 'เลื่อนชั้นเรียนเสร็จสมบูรณ์เรียบร้อยแล้ว!', backupUrl: '#' });
+          } else if (action === 'toggleSemester') {
+            resolve({ status: 'success', semester: '2', year: '2569', message: 'จำลองสลับเทอมและเลื่อนชั้นปีการศึกษาในโหมด Mock Mode สำเร็จแล้ว!' });
           } else if (action === 'uploadCsv') {
             resolve({ status: 'success' });
           }
