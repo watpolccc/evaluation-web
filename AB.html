@@ -823,8 +823,8 @@
 
   <script>
     /* */
-    const SUPABASE_URL = "https://krhcnuwaulblgwfnzwyr.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyaGNudXdhdWxibGd3Zm56d3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MDYyNjgsImV4cCI6MjA5NjM4MjI2OH0.H8J8s23yenZB_Z4WXgkXrw5yh7Uk-ccxTEAJeBjmcKU";
+    const SUPABASE_URL = "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
 
     const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";
     const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";
@@ -957,35 +957,55 @@
     }
 
     /* */
+    function showLoginPage() {
+      document.body.className = "login-portal-body";
+      document.getElementById('loginSection').style.display = 'block';
+      document.getElementById('pendingApprovalBox').style.display = 'none';
+      document.getElementById('mainAppCard').style.display = 'none';
+      hideLoader();
+    }
+
     if (supabaseClient) {
+      // timeout fallback — ถ้า 6 วินาทียังค้างอยู่ให้กลับหน้า login
+      const authTimeout = setTimeout(() => {
+        if (document.getElementById('loader').style.display === 'flex') {
+          console.warn('Auth timeout — redirecting to login');
+          showLoginPage();
+        }
+      }, 6000);
+
       supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        clearTimeout(authTimeout);
+
         if (session) {
           const user = session.user;
           currentUserEmail = user.email;
           
           if (!currentUserEmail.endsWith('@chetupon.ac.th')) {
             await supabaseClient.auth.signOut();
-            showLoader('กำลังลงชื่อออก บัญชีไม่ถูกต้อง...');
-            document.body.className = "login-portal-body";
-            document.getElementById('loginSection').style.display = 'block';
-            document.getElementById('pendingApprovalBox').style.display = 'none';
-            document.getElementById('mainAppCard').style.display = 'none';
             showModalAlert("❌ ขออภัย! ระบบอนุญาตเฉพาะอีเมลสถาบัน @chetupon.ac.th เท่านั้น");
-            hideLoader();
+            showLoginPage();
             return;
           }
 
           showLoader('กำลังตรวจสอบการอนุมัติสิทธิ์...');
-          const { data: profile, error } = await supabaseClient
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
 
-          if (error || !profile) {
+          let profile = null;
+          try {
+            const { data, error } = await supabaseClient
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+            if (!error) profile = data;
+          } catch (e) {
+            console.error('Profile fetch error:', e);
+          }
+
+          if (!profile) {
             await supabaseClient.auth.signOut();
             showModalAlert("❌ ไม่พบข้อมูลลงทะเบียนโปรไฟล์ครู โปรดสมัครใหม่อีกครั้ง");
-            hideLoader();
+            showLoginPage();
             return;
           }
 
@@ -1014,10 +1034,7 @@
 
           await loadSystemData();
         } else {
-          document.body.className = "login-portal-body";
-          document.getElementById('loginSection').style.display = 'block';
-          document.getElementById('pendingApprovalBox').style.display = 'none';
-          document.getElementById('mainAppCard').style.display = 'none';
+          showLoginPage();
         }
       });
     } else {
