@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -22,7 +23,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
-    /* --- CSS หลักของตัวแอปพลิเคชัน --- */
+    /* */
     body { 
       background: #f0f2f5; 
       font-family: 'Sarabun', sans-serif; 
@@ -30,7 +31,6 @@
       transition: background 0.3s ease;
     }
     
-    /* สไตล์เฉพาะสำหรับหน้า Login Portal หน้าเดี่ยวเต็มจอ */
     .login-portal-body {
       background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
       display: flex;
@@ -93,6 +93,7 @@
       font-size: 0.95rem; 
     }
     
+    /* */
     .nav-tabs .nav-link { 
       font-weight: bold; 
       color: #495057; 
@@ -122,7 +123,6 @@
       margin-bottom: 20px; 
     }
 
-    /* ===== WORD-LIKE TOOLBAR ===== */
     .word-toolbar {
       display: flex;
       align-items: center;
@@ -201,7 +201,7 @@
       margin-top: 2px;
     }
 
-    /* ===== หน้ากระดาษพรีวิวจำลอง (A4) ===== */
+    /* */
     .memo-preview-container-scroll {
       background: #525659;
       padding: 20px;
@@ -254,8 +254,8 @@
       margin-top: 15px;
       margin-bottom: 15px;
       table-layout: fixed; 
-      margin-left: -0.8cm !important;
-      width: calc(100% + 0.8cm) !important;
+      margin-left: -0.8cm;
+      width: calc(100% + 0.8cm);
     }
     
     .report-table th, .report-table td {
@@ -293,50 +293,66 @@
       line-height: 1.3;
     }
 
-    /* ===== PRINT SYSTEM ===== */
     #printArea {
       display: none; 
     }
 
     @media print {
-      body { 
-        background: #ffffff !important; 
-        padding: 0 !important; 
-        margin: 0 !important; 
-      }
-      
-      .main-card, nav, .nav-tabs, .btn, .alert, #loader, .form-container, #userBar, .modal, .word-toolbar { 
-        display: none !important; 
-      }
-      
-      #printArea { 
-        display: block !important; 
+      * { visibility: hidden !important; }
+
+      #printArea, #printArea * { visibility: visible !important; }
+
+      #printArea {
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
         width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
+        z-index: 99999 !important;
       }
-      
+
       @page {
         size: A4 portrait;
-        margin: 0 !important; 
+        margin: 2.5cm 2cm 2cm 3cm;
+        marks: none;
       }
-      
+
+      html, body {
+        height: auto !important;
+        overflow: visible !important;
+      }
+
       .page-doc {
-        font-family: 'TH Sarabun New', 'TH Sarabun PSK', sans-serif !important;
-        font-size: 16pt;
-        line-height: 1.25;
-        box-sizing: border-box;
-        width: 21cm;
-        min-height: 29.7cm;
+        font-family: 'TH Sarabun New', 'Sarabun', sans-serif !important;
+        font-size: 16pt !important;
+        line-height: 1.25 !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
         background: #ffffff !important;
-        
-        padding-top: 2.5cm;
-        padding-bottom: 2.0cm;
-        padding-left: 3.0cm;
-        padding-right: 2.0cm;
-        page-break-after: always;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        overflow: visible !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
       }
-      
+
+      .memo-preview-box {
+        min-height: 0 !important;
+        height: auto !important;
+      }
+
+      .report-table {
+        margin-left: 0 !important;
+        width: 100% !important;
+      }
+
       .page-doc, .page-doc *, .report-table, .report-table th, .report-table td, .opinion-box {
         color: #000000 !important;
         border-color: #000000 !important;
@@ -346,13 +362,10 @@
         print-color-adjust: exact !important;
       }
 
-      .report-table th {
-        background-color: #f2f2f2 !important;
-      }
-      
+      .report-table th { background-color: #f2f2f2 !important; }
       tr { page-break-inside: avoid !important; }
       thead { display: table-header-group !important; }
-      
+
       .page-doc [contenteditable="true"] {
         border-bottom: none !important;
         background: none !important;
@@ -363,6 +376,7 @@
 </head>
 <body>
 
+  <!-- -->
   <!-- Overlay สำหรับรอระบบประมวลผล -->
   <div class="loading-overlay" id="loader">
     <div class="spinner-border text-primary mb-2" style="width: 3rem; height: 3rem;"></div>
@@ -381,7 +395,6 @@
       </div>
       
       <div class="card-body p-4 bg-white">
-        <!-- เมนู Tab สลับระว่างล็อกอินกับสมัครสมาชิก -->
         <ul class="nav nav-pills justify-content-center mb-4" id="loginTabs" role="tablist">
           <li class="nav-item w-50 text-center" role="presentation">
             <button class="nav-link active w-100 fw-bold" id="tab-signin-btn" data-bs-toggle="pill" data-bs-target="#tab-signin" type="button" role="tab">เข้าสู่ระบบ</button>
@@ -459,6 +472,7 @@
     </div>
   </div>
 
+  <!-- -->
   <!-- ============================================== -->
   <!-- หน้าจอระบบจัดการงานหลัก (Main Workspace Card) -->
   <!-- ============================================== -->
@@ -580,6 +594,7 @@
         </div>
       </div>
 
+      <!-- -->
       <!-- บันทึกข้อมูลการแจ้งเตือน (ไม่มีแนบหลักฐาน) -->
       <div class="tab-pane fade" id="record-pane" role="tabpanel">
         <div class="row g-3 bg-light p-3 rounded border mb-4 shadow-sm">
@@ -726,16 +741,120 @@
     </div>
   </div>
 
+  <!-- -->
+  <!-- ===== 📝 หน้าต่างพรีวิวเอกสารสไตล์ MS WORD บันทึกข้อความเสนอรายงานราชการ (A4 Preview) ===== -->
+  <div class="modal fade" id="printPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white d-flex justify-content-between">
+          <h5 class="modal-title d-flex align-items-center gap-2">
+            <span class="material-symbols-outlined">edit_document</span> 
+            ตรวจสอบตัวอย่างบันทึกข้อความเสนอผู้พิจารณา
+          </h5>
+          
+          <div class="d-flex align-items-center gap-2" id="previewPageSelectorWrapper">
+            <span class="text-white-50 small">เลือกหน้าที่พิมพ์:</span>
+            <select class="form-select form-select-sm bg-secondary text-white border-0" id="previewPageSelect" onchange="switchPreviewPage(this.value)" style="width: auto;">
+            </select>
+          </div>
+
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        
+        <div class="modal-body p-0 bg-secondary d-flex flex-column align-items-center">
+          
+          <!-- WORD TOOLBAR สำหรับแต่งบันทึกข้อความ (WYSIWYG) -->
+          <div class="word-toolbar mt-2" id="modalWordToolbar" style="max-width: 21cm; width: 100%;">
+            <span class="tb-label">แบบอักษร:</span>
+            <select class="tb-select" id="tb-font" onchange="execEditorCmd('fontName', this.value)">
+              <option value="'TH Sarabun New', 'Sarabun'">TH Sarabun New</option>
+              <option value="'TH SarabunPSK'">TH SarabunPSK</option>
+              <option value="Sarabun">Sarabun</option>
+            </select>
+            <select class="tb-select" id="tb-size" onchange="execEditorCmd('fontSize', this.value)" style="width:55px;">
+              <option value="3">12pt</option>
+              <option value="4" selected>16pt</option>
+              <option value="5">20pt</option>
+            </select>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" id="btn-bold" onclick="execEditorCmd('bold')"><b>B</b></button>
+            <button class="tb-btn" id="btn-italic" onclick="execEditorCmd('italic')"><i>I</i></button>
+            <button class="tb-btn" id="btn-underline" onclick="execEditorCmd('underline')"><u>U</u></button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" onclick="execEditorCmd('justifyLeft')"><span class="material-symbols-outlined">format_align_left</span></button>
+            <button class="tb-btn" onclick="execEditorCmd('justifyCenter')"><span class="material-symbols-outlined">format_align_center</span></button>
+            <button class="tb-btn" onclick="execEditorCmd('justifyRight')"><span class="material-symbols-outlined">format_align_right</span></button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" onclick="execEditorCmd('insertUnorderedList')"><span class="material-symbols-outlined">format_list_bulleted</span></button>
+            <button class="tb-btn" onclick="execEditorCmd('insertOrderedList')"><span class="material-symbols-outlined">format_list_numbered</span></button>
+            <div class="tb-sep"></div>
+            <label class="tb-btn" style="cursor:pointer; padding:3px 5px;" title="สีตัวอักษร">
+              <span class="material-symbols-outlined">format_color_text</span>
+              <div class="tb-color-bar" id="color-bar" style="background:#000;"></div>
+              <input type="color" id="tb-color" value="#000000" style="display:none;" onchange="execEditorCmd('foreColor', this.value); document.getElementById('color-bar').style.background=this.value;">
+            </label>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" onclick="execEditorCmd('undo')"><span class="material-symbols-outlined">undo</span></button>
+            <button class="tb-btn" onclick="execEditorCmd('redo')"><span class="material-symbols-outlined">redo</span></button>
+            <div class="tb-sep"></div>
+            <button class="btn btn-outline-primary btn-sm fw-bold d-flex align-items-center gap-1" id="btnMemoAdvice" onclick="generateMemoAdvice()">
+              <i class="fas fa-magic"></i> ร่างความเห็นด้วย AI ✨
+            </button>
+          </div>
+
+          <!-- หน้าจอพรีวิวแบบกระดาษ A4 ขนาดจริง -->
+          <div class="memo-preview-container-scroll w-100 flex-grow-1">
+             <div class="memo-preview-box page-doc" id="previewMemoContainer" contenteditable="true" style="outline:none;">
+             </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer justify-content-between bg-light flex-column gap-2 align-items-stretch">
+          <div class="alert alert-info py-2 mb-0 w-100" style="font-size:0.82rem;">
+            <i class="fas fa-print"></i> <b>วิธีปิด Header/Footer ของ Browser:</b>
+            Chrome/Edge: ในหน้าต่างพิมพ์ → เลือก <b>"More settings"</b> → ปิด <b>"Headers and footers"</b> &nbsp;|&nbsp;
+            Firefox: ในหน้าต่างพิมพ์ → <b>"Page Setup"</b> → แท็บ Margins &amp; Header/Footer → ตั้งทุกช่องเป็น <b>"-blank-"</b>
+          </div>
+          <div class="d-flex justify-content-between w-100 align-items-center">
+            <small class="text-muted"><i class="fas fa-info-circle"></i> ดับเบิลคลิกตัวหนังสือเส้นประเพื่อแก้ไข</small>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">แก้ไขข้อมูลระบบ</button>
+              <button type="button" class="btn btn-success fw-bold px-4" onclick="triggerPDFDownloadOnly()"><i class="fas fa-print"></i> 🖨️ สั่งพิมพ์ / บันทึก PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ป๊อปอัปแจ้งเตือนจากระบบ (แทน alert() เดิมเพื่อความนุ่มนวลและไม่บล็อกการทํางาน) -->
+  <div class="modal fade" id="customAlertModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-primary shadow-lg">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="fas fa-bell me-2"></i>ระบบวิทยาลัยแจ้งเตือน</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body fs-6 py-4 text-center" id="customAlertBody">
+          กำลังส่งสัญญาณประมวลผล...
+        </div>
+        <div class="modal-footer justify-content-center">
+          <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">ตกลง</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- นำเข้าสคริปต์หลักสำหรับ Bootstrap 5 -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
   <script>
-    // ⚠️ นำ URL และ Key ของ Supabase จากหน้า Settings -> API มาใส่ที่นี่
+    /* */
     const SUPABASE_URL = "https://krhcnuwaulblgwfnzwyr.supabase.co/rest/v1/";
     const SUPABASE_ANON_KEY = "sb_publishable_v3YwkTIBi0Nj_uwUwHws_Q_k7WK-SfC";
     
-    // ตั้งค่า Gemini API Key เป็นค่าว่าง (จะถูกป้อนอัตโนมัติจาก Environment ตอนรัน)
     const apiKey = ""; 
 
-    // ⚠️ ตั้งค่า EmailJS คีย์สำหรับส่ง PDF เข้าเมล (คุณครูไปสมัคร EmailJS.com และนำคีย์มาป้อนตรงนี้)
-    // หากยังไม่ป้อนระบบจะใช้ฟังก์ชันจำลองและมีปุ่มให้คุณครูดาวน์โหลด PDF แทนได้ครับ
     const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";
     const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";
     const EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY";
@@ -743,7 +862,6 @@
     let supabaseClient = null;
     let isMockMode = false;
 
-    // ระบบตรวจจับความถูกต้องของ Supabase URL เพื่อป้องกันการล้มเหลวขณะดาวน์โหลด
     const isValidUrl = (url) => {
       try {
         new URL(url);
@@ -780,9 +898,12 @@
       chartPercent: null
     };
 
+    let documentMemosGroup = {};
+    let currentPreviewLevelKey = "";
+
     // 📦 ฐานข้อมูลจำลอง (Mock Data) สำหรับเปิดพรีวิวทันทีกรณีไม่มี API
     let schoolData = {
-      departments: ['การบัญชี', 'การตลาด', 'การเลขานุการ', 'เทคโนโลยีธุรกิจดิจิทัล', 'คอมพิวเตอร์กราฟิก'],
+      departments: ['การบัญชี', 'เทคโนโลยีธุรกิจดิจิทัล', 'การตลาด', 'การเลขานุการ', 'คอมพิวเตอร์กราฟิก'],
       deptData: {
         'การบัญชี': {
           'ครูสมจิต ห่วงเรียน': {
@@ -844,14 +965,13 @@
       currentYear: '2569'
     };
 
-    // ฟังก์ชันแสดงข้อความจำลอง Alert แทนคำสั่งอันเดิมเพื่อป้องกันการบล็อกเฟรม
+    /* */
     function showModalAlert(msg) {
       document.getElementById('customAlertBody').innerHTML = msg.replace(/\n/g, '<br>');
       const alertMdl = new bootstrap.Modal(document.getElementById('customAlertModal'));
       alertMdl.show();
     }
 
-    // ฟังก์ชันวาดตราครุฑ SVG กรณีโหลดรูปเครือข่ายขัดข้อง มั่นใจได้ว่าแสดงผลคมชัดแน่นอน 100%
     function showGarudaFallback(img) {
       const svgGaruda = `
         <svg viewBox="0 0 100 100" style="height:1.5cm; width:1.5cm; display:block; margin:auto;" xmlns="http://www.w3.org/2000/svg">
@@ -865,9 +985,7 @@
       img.outerHTML = svgGaruda;
     }
 
-    // =========================================================
-    // ✨ ส่วนเสริม: ฟังก์ชันเรียกใช้ Gemini API 
-    // =========================================================
+    /* */
     async function callGeminiAPI(promptText) {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
       const payload = {
@@ -953,9 +1071,7 @@
       btn.innerHTML = originalText;
     }
 
-    // =========================================================
-    // 🔐 ส่วนเสริม: ระบบการยืนยันตัวตนด้วย Google OAuth และอีเมลองค์กร
-    // =========================================================
+    /* */
     if (supabaseClient) {
       supabaseClient.auth.onAuthStateChange(async (event, session) => {
         if (session) {
@@ -1020,7 +1136,6 @@
         }
       });
     } else {
-      // โหมดออฟไลน์ทำงานอัตโนมัติหากเชื่อมโยง Supabase ล้มเหลว
       window.addEventListener('DOMContentLoaded', () => {
         isMockMode = true;
         document.getElementById('gasUrlWarning').style.display = 'block';
@@ -1157,6 +1272,7 @@
       tab.show();
     }
 
+    /* */
     async function loadAdminTeachersList() {
       if (isMockMode) return;
       try {
@@ -1219,6 +1335,7 @@
       }
     }
 
+    /* */
     async function generateAndEmailPDF() {
       const element = document.getElementById('previewMemoContainer');
       if (!element) return;
@@ -1277,6 +1394,7 @@
       link.click();
     }
 
+    /* */
     async function loadSystemData() {
       if (isMockMode) {
         loadMockData();
@@ -1371,16 +1489,10 @@
       }
     }
 
+    /* */
     function loadMockData() {
-       systemSchoolData.departments = ['การบัญชี', 'การตลาด'];
-       systemSchoolData.deptData = {
-         'การบัญชี': { 'ครูสมจิต ห่วงเรียน': { '30201-2001 บัญชีเบื้องต้น': ['คพ.2.1'] } }
-       };
-       systemSchoolData.studentsByRoom = {
-         'คพ.2.1': [{ name: 'นายสัจจะ เจริญพร', id: '66201020001', advisor: 'ครูสมใจ รักดี', major: 'การบัญชี' }]
-       };
-       systemSchoolData.roomToLevel = { 'คพ.2.1': 'ปวช.2' };
-       systemSchoolData.rawHistoryLogs = [];
+       // สลับดึงรายละเอียดของ Mockup ทั้งหมดมาเป็นต้นแบบช่วยวิเคราะห์ความถูกต้องโดยไม่มีข้อจำกัด
+       systemSchoolData = JSON.parse(JSON.stringify(schoolData));
        document.getElementById('currentSemesterYearBadge').innerText = `สถานะจำลอง (Mock Mode)`;
        const ds = document.getElementById('deptSelect');
        ds.innerHTML = '<option value="">-- เลือกแผนก --</option>';
@@ -1389,10 +1501,11 @@
        hideLoader();
     }
 
+    /* */
     function renderDashboardCharts() {
       const logs = systemSchoolData.rawHistoryLogs || [];
       
-      const uniqueSubjectsSet = new Set(logs.map(l => l.subject));
+      const uniqueSubjectsSet = new Set(logs.map(l => l.subject || l.subject_name));
       const uniqueTeachersSet = new Set(logs.map(l => l.teacher_name || l.teacher));
       const uniqueStudentsSet = new Set(logs.map(l => `${l.student_name || l.student}|${l.room}`));
 
@@ -1465,6 +1578,7 @@
       });
     }
 
+    /* */
     function onDeptChange() {
       const dept = document.getElementById('deptSelect').value;
       const ts = document.getElementById('teacherSelect');
@@ -1525,6 +1639,7 @@
       });
     }
 
+    /* */
     function showStudentsMulti() {
       const teacher = document.getElementById('teacherSelect').value;
       const subject = document.getElementById('subjectSelect').value;
@@ -1592,6 +1707,37 @@
       });
     }
 
+    function calcPercent(inputEl, totalPeriods) {
+      const missed = parseFloat(inputEl.value) || 0;
+      const prevMissed = parseFloat(inputEl.getAttribute('data-prev-missed')) || 0;
+      const row = inputEl.closest('.student-item');
+      const badge = row.querySelector('.percent-badge');
+      const checkbox = row.querySelector('.report-student-check');
+      
+      if (missed > 0) { checkbox.checked = true; } else { checkbox.checked = false; }
+
+      if (missed > 0 && missed < prevMissed) {
+        inputEl.classList.add('is-invalid');
+        badge.innerText = "0%";
+        badge.className = "badge bg-danger w-100 p-2 percent-badge";
+        showModalAlert(`❌ ผิดพลาดของข้อมูล: จำนวนคาบเรียนที่ขาดล่าสุด (${missed} คาบ) จะต้องไม่น้อยกว่าประวัติแจ้งสะสมเดิมของนักเรียนคนนี้ (${prevMissed} คาบ)`);
+        inputEl.value = prevMissed; 
+        calcPercent(inputEl, totalPeriods);
+        return;
+      } else {
+        inputEl.classList.remove('is-invalid');
+      }
+
+      let pct = 0;
+      if (totalPeriods > 0 && missed > 0) { pct = ((missed / totalPeriods) * 100).toFixed(2); }
+      
+      badge.innerText = `${pct}%`;
+      if(pct >= 20) { badge.className = "badge bg-danger w-100 p-2 percent-badge"; }
+      else if(pct >= 15) { badge.className = "badge bg-warning text-dark w-100 p-2 percent-badge"; }
+      else if(pct >= 10) { badge.className = "badge bg-info text-dark w-100 p-2 percent-badge"; }
+      else { badge.className = "badge bg-secondary w-100 p-2 percent-badge"; }
+    }
+
     function toggleRoom(id) {
       const content = document.getElementById(id);
       const icon = document.getElementById('icon_' + id);
@@ -1599,6 +1745,7 @@
       icon.className = (content.style.display === "none") ? "fas fa-chevron-down" : "fas fa-chevron-up";
     }
 
+    /* */
     async function triggerToggleSemesterAndPromote() {
       const confirmText = prompt("⚠️ ระบบจะล้างตารางวิชาทั้งหมด และเลื่อนระดับชั้นปีนักศึกษาขึ้น 1 ระดับชั้นปี\nกรุณาป้อนรหัสคำว่า 'PROMOTE' ยืนยันการทำงาน:");
       if (confirmText !== "PROMOTE") {
@@ -1617,8 +1764,6 @@
       }
 
       try {
-        // ประมวลผลดึงค่าภาคเรียนและสลับผ่านระบบสคริปต์ Database
-        // ในโปรเจค Supabase สามารถเขียนขยายโครงสร้าง Logic เพิ่มเติมได้
         showModalAlert("โปรเจค Supabase: แอดมินสามารถจัดการอัปโหลด CSV เพื่อเขียนทับโครงสร้างชั้นปีรอบเทอมถัดไปได้ทันทีครับ");
         hideLoader();
       } catch (err) {
@@ -1627,7 +1772,428 @@
       }
     }
 
-    // มัดรวมตัวจัดการรับฟังเหตุการณ์ Event Listeners ของ DOM ให้ปลอดภัยจากการอ้างอิง Null 100%
+    async function validateAndOpenSummary() {
+      const totalPeriods = document.getElementById('totalPeriods').value;
+      if (!totalPeriods || totalPeriods <= 0) {
+        showModalAlert("⚠️ กรุณาระบุจำนวนคาบเรียนรวมทั้งหมด (ทั้งเทอม) ด้วยตนเองเพื่อคำนวณร้อยละ");
+        return;
+      }
+
+      const evaluations = [];
+      let count = 0;
+      let hasError = false;
+      const currentPhase = document.getElementById('reportPhaseSelect').value;
+      const teacherName = document.getElementById('teacherSelect').value;
+      const deptName = document.getElementById('deptSelect').value;
+      const subject = document.getElementById('subjectSelect').value;
+
+      documentMemosGroup = { "ครั้งที่ 1": [], "ครั้งที่ 2": [] };
+
+      document.querySelectorAll('.room-chk:checked').forEach(cb => {
+        const room = cb.value;
+        
+        document.querySelectorAll(`.student-item[data-room="${room}"]`).forEach(stRow => {
+          const checkbox = stRow.querySelector('.report-student-check');
+          const missedInput = stRow.querySelector('.missed-input');
+          const pctText = stRow.querySelector('.percent-badge').innerText;
+          const studentName = stRow.getAttribute('data-name');
+          const studentId = stRow.getAttribute('data-id') || '';
+          const advisor = stRow.getAttribute('data-advisor') || '';
+          const major = stRow.getAttribute('data-major') || '';
+          const reasonInput = stRow.querySelector('.absence-reason');
+          
+          if (checkbox.checked) {
+            const missed = parseFloat(missedInput.value) || 0;
+            if(!missedInput.value || missed <= 0) {
+              showModalAlert(`กรุณากรอกจำนวนคาบที่ขาดเรียนจริงของ ${studentName}`);
+              hasError = true; return;
+            }
+
+            const record = { 
+              studentText: studentName, studentId: studentId, advisor: advisor, level: currentPhase,
+              missed: missed, percent: pctText, room: room, reason: reasonInput.value || 'ขาดเรียน', major: major
+            };
+
+            documentMemosGroup[currentPhase].push(record);
+            evaluations.push({
+              teacher_name: teacherName,
+              department: deptName,
+              subject: subject,
+              room: room,
+              student_name: studentName,
+              phase: currentPhase,
+              missed_periods: missed,
+              total_periods: parseInt(totalPeriods),
+              percent: parseFloat(pctText),
+              reason: reasonInput.value || 'ขาดเรียน'
+            });
+            count++;
+          }
+        });
+      });
+
+      if (hasError) return;
+      if (count === 0) { showModalAlert('⚠️ กรุณาเลือกติ๊กถูกรายชื่อนักเรียนอย่างน้อย 1 รายการก่อน'); return; }
+
+      showLoader('กำลังบันทึกข้อมูลลงฐานข้อมูล Supabase...');
+      
+      try {
+        if (!isMockMode) {
+          const { data, error } = await supabaseClient.from('attendance_logs').insert(evaluations);
+          if (error) throw error;
+        }
+        hideLoader();
+        showModalAlert("🎉 บันทึกเวลาเรียนลงระบบ สำเร็จ!");
+        setupPreviewPageSelector();
+      } catch (err) {
+        hideLoader();
+        console.error(err);
+        showModalAlert("❌ บันทึกฐานข้อมูลล้มเหลว: " + err.message);
+      }
+    }
+
+    /* */
+    function setupPreviewPageSelector() {
+      const selector = document.getElementById('previewPageSelect');
+      selector.innerHTML = "";
+      
+      let firstAvailableKey = "";
+      let index = 0;
+
+      Object.keys(documentMemosGroup).forEach(levelKey => {
+        if (documentMemosGroup[levelKey].length > 0) {
+          if (!firstAvailableKey) firstAvailableKey = levelKey;
+          const option = document.createElement('option');
+          option.value = levelKey;
+          option.innerText = `รอบแจ้งเตือน ${levelKey}`;
+          selector.appendChild(option);
+          index++;
+        }
+      });
+
+      if (index > 1) { document.getElementById('previewPageSelectorWrapper').classList.remove('hidden'); } 
+      else { document.getElementById('previewPageSelectorWrapper').classList.add('hidden'); }
+
+      switchPreviewPage(firstAvailableKey);
+      const previewModal = new bootstrap.Modal(document.getElementById('printPreviewModal'));
+      previewModal.show();
+    }
+
+    /* */
+    function switchPreviewPage(levelKey) {
+      currentPreviewLevelKey = levelKey;
+      const listData = documentMemosGroup[levelKey];
+      if (!listData || listData.length === 0) return;
+
+      const teacherName = document.getElementById('teacherSelect').value;
+      const deptName = document.getElementById('deptSelect').value;
+      const subjectRaw = document.getElementById('subjectSelect').value;
+      const totalPeriods = document.getElementById('totalPeriods').value;
+
+      const subjectInfo = extractSubjectInfo(subjectRaw);
+      const thaiSubjectCode = toThaiNumerals(subjectInfo.code);
+
+      const firstStudent = listData[0];
+      const roomKey = firstStudent.room;
+      const mappingLevelStr = systemSchoolData.roomToLevel && systemSchoolData.roomToLevel[roomKey] 
+                               ? systemSchoolData.roomToLevel[roomKey] : "ปวช.1";
+      
+      const levelParts = mappingLevelStr.split('.');
+      const derivedLevel = levelParts[0] || "ปวช";
+      const derivedYearNum = levelParts[1] || "1";
+
+      const formattedDate = new Date().toLocaleDateString('th-TH', {year: 'numeric', month: 'long', day: 'numeric'});
+      const thaiDate = toThaiNumerals(formattedDate);
+      const thaiTotalPeriods = toThaiNumerals(totalPeriods);
+      const studentMajorName = firstStudent.major || deptName;
+      const thaiDerivedYear = toThaiNumerals(derivedYearNum); // แก้ไข ReferenceError: ประกาศค่าเพื่อจัดหน้าตัวเลขไทย
+
+      let rowsHtml = "";
+      listData.forEach((st, idx) => {
+        rowsHtml += `
+          <tr>
+            <td style="text-align: center; width: 5%;">${toThaiNumerals(idx + 1)}</td>
+            <td style="text-align: center; width: 18%;">${toThaiNumerals(st.studentId || '................')}</td>
+            <td style="text-align: left; width: 20%;">${st.studentText}</td>
+            <td style="text-align: center; width: 10%;">${toThaiNumerals(st.room)}</td>
+            <td style="text-align: left; width: 20%;">${st.advisor || '.....................................'}</td>
+            <td style="text-align: center; width: 10%;">${toThaiNumerals(st.missed)} / ${thaiTotalPeriods}</td>
+            <td style="text-align: center; width: 8%;">${toThaiNumerals(st.percent)}</td>
+            <td style="text-align: center; width: 9%;">${st.reason || 'ขาดเรียน'}</td>
+          </tr>
+        `;
+      });
+
+      const templateHtml = `
+        <table style="width:100%; border-collapse:collapse;">
+          <tr>
+            <td style="width: 15%;">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Garuda_emb_of_Thailand.svg/200px-Garuda_emb_of_Thailand.svg.png" class="garuda-img" alt="ตราครุฑ" onerror="showGarudaFallback(this)">
+            </td>
+            <td style="width: 85%;" class="title-memo">บันทึกข้อความ</td>
+          </tr>
+        </table>
+
+        <div style="margin-top: 15px; font-size: 16pt; line-height: 1.15;">
+          <div><span class="label-bold" style="font-weight: bold; font-size: 18pt;">ส่วนราชการ</span>&nbsp;&nbsp;งานครูที่ปรึกษา ฝ่ายพัฒนากิจการนักเรียน นักศึกษา วิทยาลัยพณิชยการเชตุพน</div>
+          <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+            <div style="width: 55%;"><span class="label-bold" style="font-weight: bold; font-size: 18pt;">ที่</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span contenteditable="true" style="font-weight: normal !important;"></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+            <div style="width: 45%;"><span class="label-bold" style="font-weight: bold; font-size: 18pt;">วันที่</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span contenteditable="true" style="font-weight: normal !important;">&nbsp;${thaiDate}&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+          </div>
+          <div style="margin-top: 5px;"><span class="label-bold" style="font-weight: bold; font-size: 18pt;">เรื่อง</span>&nbsp;&nbsp;แจ้งรายละเอียดการขาดเรียนของนักเรียน นักศึกษา</div>
+        </div>
+
+        <div class="salutation" style="font-size: 16pt; font-weight: normal; margin-top: 4px; margin-bottom: 4px;">เรียน&nbsp;&nbsp;หัวหน้างานครูที่ปรึกษา</div>
+        
+        <div class="lead-text" style="text-indent: 1.5cm; text-align: justify; line-height: 1.25; margin-top: 4px;">
+          ตามที่ข้าพเจ้าได้รับมอบหมายให้จัดการเรียนการสอนนักเรียนนักศึกษา ระดับ&nbsp;<span contenteditable="true" style="text-indent: 0.1cm;">&nbsp;<b>${derivedLevel}</b>&nbsp;</span>&nbsp;ชั้นปีที่&nbsp;<span contenteditable="true" style="text-indent: 0.1cm;">&nbsp;<b>${thaiDerivedYear}</b>&nbsp;</span>&nbsp;สาขาวิชา&nbsp;<span contenteditable="true" style="text-indent: 0.1cm;">&nbsp;<b>${studentMajorName}</b>&nbsp;</span>&nbsp;จึงขอรายงานการขาดเรียนของนักเรียนนักศึกษา รหัสวิชา&nbsp;<span contenteditable="true" style="text-indent: 0.1cm;">&nbsp;<b>${thaiSubjectCode}</b>&nbsp;</span>&nbsp;รายวิชา&nbsp;<span contenteditable="true" style="text-indent: 0.1cm;">&nbsp;<b>${subjectInfo.name}</b>&nbsp;</span>&nbsp;รายชื่อดังต่อไปนี้
+        </div>
+
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th style="width: 5%; text-align: center;">ที่</th>
+              <th style="width: 18%; text-align: center;">รหัสประจำตัว</th>
+              <th style="width: 20%; text-align: center;">ชื่อ-สกุล</th>
+              <th style="width: 10%; text-align: center;">ห้อง</th>
+              <th style="width: 20%; text-align: center;">ครูที่ปรึกษา</th>
+              <th style="width: 10%; text-align: center;">จำนวน<br>คาบเรียน</th>
+              <th style="width: 8%; text-align: center;">คิดเป็นร้อยละ</th>
+              <th style="width: 9%; text-align: center;">สาเหตุ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+
+        <div class="lead-text" style="text-indent: 1.5cm; margin-top: 15px; margin-bottom: 25px;">
+          จึงเรียนมาเพื่อโปรดทราบและดำเนินการแจ้งครูที่ปรึกษาและพัฒนาปรับปรุงแก้ไข
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-right: 50px; text-align: center; line-height: 1.6; margin-bottom: 30px;">
+          <div>
+            ลงชื่อ............................................................ครูผู้สอน<br>
+            ( ${teacherName} )
+          </div>
+        </div>
+
+        <div class="opinion-box">
+          <b>ความคิดเห็นหัวหน้างานครูที่ปรึกษา</b><br>
+          มอบครูที่ปรึกษาดำเนินการติดตามหาสาเหตุการขาดเรียนและพัฒนาปรับปรุงแก้ไขโดยร่วมกับผู้ปกครอง<br>
+          อื่นๆ.....................................................................................................................................................
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 35px; margin-right: 50px;">
+          <table style="text-align: center; line-height: 1.6; font-size: 16pt; border: none !important;">
+            <tr><td style="border: none !important; padding: 0;">ลงชื่อ.................................................</td></tr>
+            <tr><td style="border: none !important; padding: 0;">(นางสาวอาชัญญา  ศรีวรรธนศิลป์)</td></tr>
+            <tr><td style="border: none !important; padding: 0;">หัวหน้างานครูที่ปรึกษา</td></tr>
+          </table>
+        </div>
+      `;
+
+      document.getElementById('previewMemoContainer').innerHTML = templateHtml;
+      document.getElementById('printedMemoContainer').innerHTML = templateHtml;
+      
+      const toolbar = document.getElementById('modalWordToolbar');
+      
+      const existSend = document.getElementById('btnSendEmailPDF');
+      if (existSend) existSend.remove();
+      const existDl = document.getElementById('btnDownloadPDF');
+      if (existDl) existDl.remove();
+
+      toolbar.innerHTML += `
+        <button class="btn btn-sm btn-purple fw-bold" id="btnSendEmailPDF" onclick="generateAndEmailPDF()" style="background-color: #6f42c1; color: white;" title="ส่ง PDF เข้าเมลคุณครู">
+          <i class="fas fa-envelope"></i> ส่ง PDF เข้าเมล 📧
+        </button>
+        <button class="btn btn-sm btn-success fw-bold" id="btnDownloadPDF" onclick="triggerPDFDownloadOnly()" style="color: white;" title="ดาวน์โหลด PDF / สั่งพิมพ์">
+          <i class="fas fa-download"></i> ดาวน์โหลด PDF 📥
+        </button>
+      `;
+
+      updateToolbarUIState();
+    }
+
+    function triggerPDFDownloadOnly() {
+      const previewContent = document.getElementById('previewMemoContainer');
+      if (!previewContent) return;
+      document.getElementById('printedMemoContainer').innerHTML = previewContent.innerHTML;
+      const modal = bootstrap.Modal.getInstance(document.getElementById('printPreviewModal'));
+      if (modal) {
+        modal.hide();
+        setTimeout(() => { window.print(); }, 400);
+      } else {
+        window.print();
+      }
+    }
+
+    function extractSubjectInfo(subjectStr) {
+      if (!subjectStr) return { code: "................................", name: "................................" };
+      const codeRegex = /^([0-9]+-[0-9]+(-[0-9]+)?)\s*(.*)$/;
+      const match = subjectStr.match(codeRegex);
+      if (match) { return { code: match[1], name: match[3].trim() }; }
+      return { code: "................................", name: subjectStr };
+    }
+
+    function execEditorCmd(cmd, value = null) {
+      document.execCommand(cmd, false, value);
+      updateToolbarUIState();
+    }
+
+    function updateToolbarUIState() {
+      const cmds = ['bold', 'italic', 'underline'];
+      const ids = ['btn-bold', 'btn-italic', 'btn-underline'];
+      cmds.forEach((cmd, i) => {
+        const btn = document.getElementById(ids[i]);
+        if (btn) btn.classList.toggle('active', document.queryCommandState(cmd));
+      });
+    }
+
+    function downloadDeptTemplate() {
+      const headers = "แผนก,คำนำหน้า,ชื่อ,นามสกุล,วิชา,ห้อง";
+      const sample = "การบัญชี,นางสาว,ปภัสสร,นครไพร,30201-2001 บัญชีเบื้องต้น,คพ.2.1";
+      triggerCsvDownload("Template_รายวิชา_เชตุพน.csv", headers, sample);
+    }
+
+    function downloadLevelTemplate() {
+      const headers = "แผนก,ห้องเรียน,คำนำหน้า,ชื่อ,นามสกุล,เลขประจำตัว,ครูที่ปรึกษา";
+      const sample = "การบัญชี,คพ.2.1,นาย,สมเกียรติ,ขยันเรียน,6620101,ครูสมใจ รักดี";
+      triggerCsvDownload("Template_รายชื่อนักเรียน_เชตุพน.csv", headers, sample);
+    }
+
+    function triggerCsvDownload(filename, headers, sampleRow) {
+      const csvContent = "\ufeff" + headers + "\n" + sampleRow;
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    async function uploadCsvDept() {
+      const fileInput = document.getElementById('csvDeptFile');
+      const file = fileInput.files[0];
+      if (!file) { showModalAlert('กรุณาเลือกไฟล์ข้อมูล CSV รายวิชาก่อนครับ'); return; }
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        showLoader('กำลังบันทึกรายวิชาเข้าสู่ Supabase...');
+        try {
+          const lines = e.target.result.split('\n');
+          let insertData = [];
+          for (let i = 1; i < lines.length; i++) { 
+            if (lines[i].trim() === "") continue;
+            let cols = lines[i].split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
+            insertData.push({
+              department: cols[0], prefix: cols[1], fname: cols[2], lname: cols[3], subject: cols[4], room: cols[5]
+            });
+          }
+          if(insertData.length > 0) {
+            const deptNames = [...new Set(insertData.map(r => r.department))];
+            for (let d of deptNames) {
+               await supabaseClient.from('subject_structures').delete().eq('department', d);
+            }
+            const { error } = await supabaseClient.from('subject_structures').insert(insertData);
+            if (error) throw error;
+          }
+          hideLoader();
+          showModalAlert(`🎉 อัปโหลดโครงสร้างวิชาเข้าสู่ระบบเสร็จสิ้น!`);
+          fileInput.value = '';
+          await loadSystemData();
+        } catch (err) {
+          hideLoader();
+          showModalAlert("❌ ข้อผิดพลาดการอัปโหลด: " + err.message);
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+
+    async function uploadCsvLevel() {
+      const fileInput = document.getElementById('csvLevelFile');
+      const file = fileInput.files[0];
+      if (!file) { showModalAlert('กรุณาเลือกไฟล์ CSV รายชื่อเด็กก่อนครับ'); return; }
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        showLoader('กำลังบันทึกรายชื่อนักเรียนเข้าสู่ Supabase...');
+        try {
+          const lines = e.target.result.split('\n');
+          let insertData = [];
+          for (let i = 1; i < lines.length; i++) { 
+            if (lines[i].trim() === "") continue;
+            let cols = lines[i].split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
+            insertData.push({
+              department: cols[0], room: cols[1], prefix: cols[2], fname: cols[3], lname: cols[4], student_id: cols[5], advisor: cols[6]
+            });
+          }
+          if(insertData.length > 0) {
+             const roomNames = [...new Set(insertData.map(r => r.room))];
+             for (let r of roomNames) {
+                 await supabaseClient.from('student_records').delete().eq('room', r);
+             }
+             const { error } = await supabaseClient.from('student_records').insert(insertData);
+             if (error) throw error;
+          }
+          hideLoader();
+          showModalAlert(`🎉 อัปโหลดรายชื่อนักเรียนเข้าสู่ระบบเสร็จสิ้น!`);
+          fileInput.value = '';
+          await loadSystemData();
+        } catch (err) {
+          hideLoader();
+          showModalAlert("❌ ข้อผิดพลาดการอัปโหลด: " + err.message);
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+
+    function simulateMockResponse(action, payload) {
+      console.log("Mocking Action: ", action, payload);
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          if (action === 'checkAccess') {
+            resolve({
+              authorized: true,
+              isAdmin: currentUserEmail === "watpol.ccc@chetupon.ac.th",
+              email: currentUserEmail
+            });
+          } else if (action === 'getSchoolData') {
+            resolve(schoolData);
+          } else if (action === 'saveData') {
+            resolve({ status: 'success' });
+          } else if (action === 'toggleSemester') {
+            resolve({ status: 'success', semester: '2', year: '2569', message: 'จำลองสลับเทอมและเลื่อนชั้นปีการศึกษาในโหมด Mock Mode สำเร็จแล้ว!' });
+          } else if (action === 'uploadCsv') {
+            resolve({ status: 'success' });
+          }
+        }, 600);
+      });
+    }
+
+    function showLoader(text) {
+      document.getElementById('loaderText').innerText = text;
+      document.getElementById('loader').style.display = 'flex';
+    }
+    
+    function hideLoader() {
+      document.getElementById('loader').style.display = 'none';
+    }
+
+    function toThaiNumerals(str) {
+      if (str === null || str === undefined) return '';
+      const thaiDigits = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'];
+      return String(str).replace(/[0-9]/g, function(ch) { return thaiDigits[Number(ch)]; });
+    }
+
+    function resetForm() {
+      document.getElementById('deptSelect').selectedIndex = 0;
+      onDeptChange();
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       const previewMemo = document.getElementById('previewMemoContainer');
       if (previewMemo) {
