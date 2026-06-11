@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -1579,6 +1580,11 @@ function handleEvidenceBtnClick(e) {
     }
     triggerEvidenceUpload(recId);
 }
+
+        function triggerEvidenceUpload(recordId) {
+            activeUploadRecordId = recordId;
+            document.getElementById('evidence-file-input').click();
+        }
 
         function processEvidenceUpload(event) {
             const file = event.target.files[0];
