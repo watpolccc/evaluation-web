@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -1581,11 +1580,6 @@ function handleEvidenceBtnClick(e) {
     triggerEvidenceUpload(recId);
 }
 
-        function triggerEvidenceUpload(recordId) {
-            activeUploadRecordId = recordId;
-            document.getElementById('evidence-file-input').click();
-        }
-
         function processEvidenceUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1601,19 +1595,32 @@ function handleEvidenceBtnClick(e) {
 
         async function uploadEvidenceToGAS(recordId, base64String) {
             const gasUrl = localStorage.getItem('cfg_gas_url');
-            showCustomModal('กำลังส่งหลักฐาน...', 'กำลังแปลงรูปภาพและบันทึกประวัติลง Google Sheets & Google Drive ของคุณ กรุณารอสักครู่');
+            console.log("=== UPLOAD DEBUG ===");
+    console.log("recordId:", recordId);
+    console.log("gasUrl:", gasUrl);
+    console.log("base64 length:", base64String ? base64String.length : "NULL");
+    
+    showCustomModal('กำลังส่งหลักฐาน...', 'กำลังแปลงรูปภาพ...');
 
-            if (gasUrl) {
-                try {
-                    const resp = await fetch(gasUrl, {
-                        method: "POST",
-                        body: JSON.stringify({
-                            action: "UploadEvidence",
-                            record_id: recordId,
-                            image_base64: base64String
-                        })
-                    });
-                    const resJson = await resp.json();
+    if (gasUrl) {
+        try {
+            const payload = {
+                action: "UploadEvidence",
+                record_id: recordId,
+                image_base64: base64String
+            };
+            console.log("Sending payload, record_id:", payload.record_id);
+            
+            const resp = await fetch(gasUrl, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+            
+            console.log("Response status:", resp.status);
+            const resText = await resp.text();
+            console.log("Response text:", resText);
+            
+            const resJson = JSON.parse(resText);
 
                     closeCustomModal();
                     if (resJson.status === "success") {
