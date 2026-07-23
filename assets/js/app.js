@@ -632,3 +632,5 @@ function activateMockMode() {
         renderStatsPage();
     }, 500);
 }
+
+
