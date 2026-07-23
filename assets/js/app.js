@@ -49,12 +49,39 @@ function normalizeDocumentItem(item = {}) {
     };
 }
 
+function normalizeImageUrl(value) {
+    const imageUrl = asText(value);
+    if (!imageUrl || imageUrl === '#') return '';
+
+    // แปลงลิงก์หน้า Preview/Share ของ Google Drive เป็นลิงก์รูปสำหรับ <img>
+    const drivePatterns = [
+        /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
+        /drive\.google\.com\/(?:open|uc)\?(?:[^#]*&)?id=([a-zA-Z0-9_-]+)/,
+        /[?&]id=([a-zA-Z0-9_-]+)/
+    ];
+
+    for (const pattern of drivePatterns) {
+        const match = imageUrl.match(pattern);
+        if (match) {
+            return `https://drive.google.com/thumbnail?id=${encodeURIComponent(match[1])}&sz=w1200`;
+        }
+    }
+
+    // ป้องกันค่าที่ไม่ใช่ URL ถูกนำไปใช้เป็น src
+    try {
+        const parsedUrl = new URL(imageUrl);
+        return ['http:', 'https:'].includes(parsedUrl.protocol) ? parsedUrl.href : '';
+    } catch {
+        return '';
+    }
+}
+
 function normalizeStatsItem(item = {}) {
     return {
         title: asText(item.title),
         description: asText(item.description),
         link: asText(item.link),
-        imageUrl: asText(item.imageUrl || item.imageURL || item.image)
+        imageUrl: normalizeImageUrl(item.imageUrl || item.imageURL || item.image)
     };
 }
 
@@ -512,7 +539,7 @@ function renderStatsPage() {
                 <div>
                     ${hasImg ? `
                     <div class="h-48 overflow-hidden bg-slate-100 border-b border-slate-200 flex items-center justify-center">
-                        <img src="${stat.imageUrl}" alt="${stat.title}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400/1e3a8a/ffffff?text=STATISTICS'">
+                        <img src="${stat.imageUrl}" alt="${stat.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e3a8a/ffffff?text=STATISTICS'">
                     </div>` : `
                     <div class="h-12 bg-blue-900 border-b border-slate-200 flex items-center justify-center text-amber-400">
                         <i data-lucide="bar-chart-2" class="w-5 h-5 mr-1.5"></i> รายงานเชิงสรุป
