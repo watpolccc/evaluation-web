@@ -1,0 +1,35 @@
+body {
+    font-family: 'Sarabun', sans-serif;
+    scroll-behavior: smooth;
+     /* ======================================================= */
+    /* 🖤 ฟิลเตอร์โทนสีเทา (Grayscale Filter) สำหรับช่วงไว้ทุกข์ */
+    /* หากต้องการให้บราวเซอร์แสดงสีปกติ ให้ลบหรือคอมเมนต์ 2 บรรทัดด้านล่างนี้ออก */
+    /* ======================================================= */
+    filter: grayscale(70%);
+    -webkit-filter: grayscale(70%);
+}
+/* รูปแบบพื้นหลังแบนเนอร์สไตล์ทางการศึกษา */
+.hero-pattern {
+    background-color: #1e3a8a;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d97706' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+/* เอฟเฟกต์ Fade-in ตอนกดเปลี่ยนหน้าเว็บ */
+.fade-in {
+    animation: fadeIn 0.4s ease-in-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* สถานะแสดงว่าเรากำลังเปิดใช้งานหน้าเมนูนั้นๆ */
+.nav-link.active {
+    color: #1e3a8a;
+    border-bottom: 3px solid #d97706; /* ตัดด้วยสีทองสง่างาม */
+    font-weight: 600;
+}
+.nav-link-mobile.active {
+    color: #1e3a8a;
+    background-color: #f0fdf4;
+    border-left: 4px solid #d97706;
+    font-weight: 600;
+}
