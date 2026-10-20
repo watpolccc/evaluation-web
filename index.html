@@ -1,7 +1,27 @@
 <!DOCTYPE html>
-<html lang="th">
+<!-- ======================================================= -->
+<!-- 🖤 โหมดไว้อาลัย (Mourning Mode)                          -->
+<!--   ค่าเริ่มต้นเมื่อเข้าเว็บครั้งแรก:                         -->
+<!--   เปิด: <html lang="th" class="mourning">                -->
+<!--   ปิด: <html lang="th">  (ลบ class="mourning" ออก)       -->
+<!--   ผู้เข้าชมกดสวิตช์ "ไว้อาลัย" บนแถบเมนูเพื่อสลับเองได้      -->
+<!--   และเบราว์เซอร์จะจำค่าที่เลือกไว้                         -->
+<!--   เมื่อเปิด เว็บจะเป็นโทนสีเทาและมีริบบิ้นดำข้างโลโก้       -->
+<!--   ปรับความเข้มของสีเทาได้ที่ --mourning-grayscale ใน styles.css -->
+<!-- ======================================================= -->
+<html lang="th" class="mourning">
 <head>
     <meta charset="UTF-8">
+    <!-- ใช้ค่าโหมดไว้อาลัยที่ผู้เข้าชมเลือกไว้ก่อนแสดงผล (ป้องกันหน้าเว็บกะพริบสี) -->
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('mourningMode');
+                if (saved === 'on') document.documentElement.classList.add('mourning');
+                if (saved === 'off') document.documentElement.classList.remove('mourning');
+            } catch (e) {}
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>งานวัดผลและประเมินผล วิทยาลัยพณิชยการเชตุพน</title>
     <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1vGIYgOy7HBq8OpqTmUyGze7jjKxZcJ_q">
@@ -11,7 +31,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Lucide Icons สำหรับไอคอนประกอบทั้งหมดในระบบ -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
 
     <!-- Google Fonts: ใช้ Sarabun เป็นฟอนต์หลักเพื่อความเป็นทางการระดับสถาบันศึกษา -->
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -25,6 +45,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20">
                 <div class="flex items-center cursor-pointer" onclick="navigate('home')">
+                    <!-- ริบบิ้นไว้ทุกข์ แสดงเฉพาะเมื่อเปิดโหมดไว้อาลัย -->
+                    <svg class="mourning-ribbon w-6 h-9 mr-2 flex-shrink-0" viewBox="0 0 40 60" role="img" aria-label="ริบบิ้นไว้ทุกข์">
+                        <path fill="#111827" fill-rule="evenodd" d="M20 3C12.5 3 8.5 8.2 8.5 14.5c0 5 2.8 10.2 6 15.3L3.5 56l8.5 2.2L20 39.5l8 18.7 8.5-2.2-11-26.2c3.2-5.1 6-10.3 6-15.3C31.5 8.2 27.5 3 20 3zm0 6.5c3 0 5 2.1 5 5.2 0 3-2 7-5 11.3-3-4.3-5-8.3-5-11.3 0-3.1 2-5.2 5-5.2z"/>
+                    </svg>
                     <!-- จุดที่ 1: เปลี่ยนจากไอคอนเป็นรูปโลโก้ -->
                     <div class="bg-white p-1 rounded-xl shadow-md hover:scale-105 transition-transform duration-300 flex-shrink-0 border border-slate-100">
                         <!-- นำ URL รูปภาพโลโก้ที่แปลงแล้วมาใส่แทนลิงก์ด้านล่างนี้ได้เลยครับ -->
@@ -37,11 +61,16 @@
                 </div>
                 
                 <!-- เมนูสำหรับจอคอมพิวเตอร์ (Desktop Menu) -->
-                <div class="hidden md:flex items-center space-x-6 h-full">
+                <div class="hidden md:flex items-center space-x-3 lg:space-x-5 h-full">
                     <a href="#" onclick="navigate('home')" data-target="home" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">หน้าแรก</a>
                     <a href="#" onclick="navigate('news')" data-target="news" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">ข่าวประชาสัมพันธ์</a>
                     <a href="#" onclick="navigate('documents')" data-target="documents" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">ดาวน์โหลดเอกสาร</a>
                     <a href="#" onclick="navigate('stats')" data-target="stats" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">ข้อมูลสถิติ</a>
+                    <!-- สวิตช์โหมดไว้อาลัย (จอคอมพิวเตอร์) -->
+                    <button type="button" class="mourning-toggle flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors" role="switch" aria-checked="false" aria-label="โหมดไว้อาลัย" title="สลับโหมดไว้อาลัย">
+                        <svg class="w-3.5 h-5 flex-shrink-0" viewBox="0 0 40 60" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M20 3C12.5 3 8.5 8.2 8.5 14.5c0 5 2.8 10.2 6 15.3L3.5 56l8.5 2.2L20 39.5l8 18.7 8.5-2.2-11-26.2c3.2-5.1 6-10.3 6-15.3C31.5 8.2 27.5 3 20 3zm0 6.5c3 0 5 2.1 5 5.2 0 3-2 7-5 11.3-3-4.3-5-8.3-5-11.3 0-3.1 2-5.2 5-5.2z"/></svg>
+                        <span class="switch-track"><span class="switch-thumb"></span></span>
+                    </button>
                 </div>
 
                 <!-- ปุ่มเมนูสำหรับหน้าจอมือถือ (Mobile Hamburger Menu) -->
@@ -60,6 +89,11 @@
                 <a href="#" onclick="navigate('news')" data-target="news" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">ข่าวประชาสัมพันธ์</a>
                 <a href="#" onclick="navigate('documents')" data-target="documents" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">ดาวน์โหลดเอกสาร</a>
                 <a href="#" onclick="navigate('stats')" data-target="stats" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">ข้อมูลสถิติ</a>
+                <!-- สวิตช์โหมดไว้อาลัย (มือถือ) -->
+                <button type="button" class="mourning-toggle w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50 border-l-4 border-transparent" role="switch" aria-checked="false" aria-label="โหมดไว้อาลัย" title="สลับโหมดไว้อาลัย">
+                    <svg class="w-4 h-6 flex-shrink-0" viewBox="0 0 40 60" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M20 3C12.5 3 8.5 8.2 8.5 14.5c0 5 2.8 10.2 6 15.3L3.5 56l8.5 2.2L20 39.5l8 18.7 8.5-2.2-11-26.2c3.2-5.1 6-10.3 6-15.3C31.5 8.2 27.5 3 20 3zm0 6.5c3 0 5 2.1 5 5.2 0 3-2 7-5 11.3-3-4.3-5-8.3-5-11.3 0-3.1 2-5.2 5-5.2z"/></svg>
+                    <span class="switch-track"><span class="switch-thumb"></span></span>
+                </button>
             </div>
         </div>
     </nav>
@@ -71,16 +105,23 @@
         <!-- ================= หน้าหลัก (PAGE: HOME) ================= -->
         <div id="page-home" class="page-section flex-grow flex flex-col">
             <!-- ส่วนหัวสถาบันสไตล์ทางการและน่าเชื่อถือ -->
-            <header class="hero-pattern text-white py-14 lg:py-20 shadow-inner">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 class="text-3xl md:text-5xl font-bold mb-4 tracking-wide drop-shadow-md">งานวัดผลและประเมินผล<br>วิทยาลัยพณิชยการเชตุพน</h1>
-                    <p class="text-lg md:text-xl text-blue-100 mb-8 max-w-2xl mx-auto drop-shadow font-light">
-                        เอกสารราชการ คู่มือ แบบฟอร์ม ข่าวสาร และสถิติทางการศึกษา
-                    </p>
-                    <div class="flex justify-center gap-4">
-                        <button onclick="navigate('documents')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-xl shadow-lg transition-all duration-150 flex items-center hover:scale-105">
-                            <i data-lucide="download-cloud" class="w-5 h-5 mr-2"></i> ค้นหาแบบฟอร์มเอกสาร
-                        </button>
+            <!-- ภาพพื้นหลังตั้งค่าได้ที่ CONFIG.heroImageUrl ใน assets/js/app.js -->
+            <header id="home-hero" class="hero-pattern text-white py-14 lg:py-20 shadow-inner overflow-hidden">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center">
+                        <img src="https://lh3.googleusercontent.com/d/1vGIYgOy7HBq8OpqTmUyGze7jjKxZcJ_q" alt="ตราวิทยาลัยพณิชยการเชตุพน" class="w-20 h-20 object-contain bg-white rounded-2xl p-1.5 shadow-xl mb-5 mx-auto">
+                        <h1 class="text-3xl md:text-5xl font-bold mb-4 tracking-wide drop-shadow-md leading-tight">งานวัดผลและประเมินผล<br>วิทยาลัยพณิชยการเชตุพน</h1>
+                        <p class="text-lg md:text-xl text-blue-100 mb-8 max-w-2xl mx-auto drop-shadow font-light">
+                            เอกสารราชการ คู่มือ แบบฟอร์ม ข่าวสาร และสถิติทางการศึกษา
+                        </p>
+                        <div class="flex justify-center gap-3 flex-wrap">
+                            <button onclick="navigate('documents')" class="bg-white/10 hover:bg-white/20 border border-white/40 text-white font-bold px-6 py-3 rounded-xl shadow-lg transition-all duration-150 flex items-center hover:scale-105">
+                                <i data-lucide="download-cloud" class="w-5 h-5 mr-2"></i> ค้นหาแบบฟอร์มเอกสาร
+                            </button>
+                            <button onclick="navigate('stats')" class="bg-white/10 hover:bg-white/20 border border-white/40 text-white font-bold px-6 py-3 rounded-xl shadow-lg transition-all duration-150 flex items-center hover:scale-105">
+                                <i data-lucide="bar-chart-3" class="w-5 h-5 mr-2"></i> ข้อมูลสถิติ
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -97,7 +138,7 @@
                             ดูข่าวทั้งหมด <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
                         </button>
                     </div>
-                    <div id="home-news-container" class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
+                    <div id="home-news-container" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <!-- โหลดข้อมูลอัตโนมัติ -->
                         <div class="col-span-full py-10 text-center text-slate-400">
                             <i data-lucide="loader" class="w-8 h-8 animate-spin mx-auto mb-2 text-slate-300"></i> กำลังอัปเดตข่าวใหม่...
@@ -125,10 +166,11 @@
         </div>
 
         <!-- ================= หน้าข่าวสาร (PAGE: NEWS) ================= -->
-        <div id="page-news" class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full fade-in">
-            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-4 border-b-2 border-slate-200">
+        <div id="page-news" class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 w-full fade-in">
+            <!-- หัวหน้าแบบล็อกติดใต้แถบเมนูขณะเลื่อนดูข้อมูล -->
+            <div class="page-header sticky top-20 z-30 bg-slate-50 flex flex-col md:flex-row md:items-center justify-between mb-8 pt-4 pb-4 border-b-2 border-slate-200">
                 <div>
-                    <h2 class="text-3xl font-bold text-blue-950 flex items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold text-blue-950 flex items-center">
                         <div class="p-2 bg-amber-50 rounded-lg mr-3 text-amber-600">
                             <i data-lucide="megaphone" class="w-8 h-8"></i>
                         </div>
@@ -157,10 +199,11 @@
         </div>
 
         <!-- ================= หน้าดาวน์โหลดเอกสาร (PAGE: DOCUMENTS) ================= -->
-        <div id="page-documents" class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full fade-in">
-            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-4 border-b-2 border-slate-200">
+        <div id="page-documents" class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 w-full fade-in">
+            <!-- หัวหน้าแบบล็อกติดใต้แถบเมนูขณะเลื่อนดูข้อมูล -->
+            <div class="page-header sticky top-20 z-30 bg-slate-50 flex flex-col md:flex-row md:items-center justify-between mb-8 pt-4 pb-4 border-b-2 border-slate-200">
                 <div>
-                    <h2 class="text-3xl font-bold text-blue-950 flex items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold text-blue-950 flex items-center">
                         <div class="p-2 bg-blue-50 rounded-lg mr-3 text-blue-600">
                             <i data-lucide="download-cloud" class="w-8 h-8"></i>
                         </div>
@@ -188,10 +231,11 @@
         </div>
 
         <!-- ================= หน้าแสดงข้อมูลสถิติ (PAGE: STATS) ================= -->
-        <div id="page-stats" class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full fade-in">
-            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-4 border-b-2 border-slate-200">
+        <div id="page-stats" class="page-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10 w-full fade-in">
+            <!-- หัวหน้าแบบล็อกติดใต้แถบเมนูขณะเลื่อนดูข้อมูล -->
+            <div class="page-header sticky top-20 z-30 bg-slate-50 flex flex-col md:flex-row md:items-center justify-between mb-8 pt-4 pb-4 border-b-2 border-slate-200">
                 <div>
-                    <h2 class="text-3xl font-bold text-blue-950 flex items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold text-blue-950 flex items-center">
                         <div class="p-2 bg-green-50 rounded-lg mr-3 text-green-600">
                             <i data-lucide="bar-chart-3" class="w-8 h-8"></i>
                         </div>
@@ -210,25 +254,33 @@
     </div>
 
     <!-- ส่วนท้ายสไตล์แบบทางการน่าเชื่อถือ (Footer) -->
-    <footer class="bg-slate-900 text-slate-300 py-12 mt-auto border-t-4 border-amber-500">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-10">
+    <footer class="bg-slate-900 text-slate-300 py-5 md:py-12 mt-auto border-t-4 border-amber-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
             <!-- คอลัมน์ที่ 1: ตราสัญลักษณ์และข้อมูลหน่วยงาน -->
-            <div class="space-y-4">
-                <div class="flex items-center space-x-3 mb-4">
+            <!-- บนมือถือ: แสดงเฉพาะส่วนนี้ และกดปุ่มลูกศรเพื่อแสดงข้อมูลอื่น ๆ -->
+            <div class="flex items-center md:items-start justify-between gap-3">
+                <div class="flex items-center space-x-3 md:mb-4">
                     <!-- จุดที่ 2: เปลี่ยนจากไอคอนเป็นรูปโลโก้ -->
                     <div class="bg-white p-1.5 rounded-lg flex-shrink-0">
                         <!-- นำ URL รูปภาพโลโก้ที่แปลงแล้วมาใส่แทนลิงก์ด้านล่างนี้ได้เลยครับ -->
-                        <img src="https://lh3.googleusercontent.com/d/1vGIYgOy7HBq8OpqTmUyGze7jjKxZcJ_q" alt="โลโก้วิทยาลัย" class="w-12 h-12 object-contain rounded-md">
+                        <img src="https://lh3.googleusercontent.com/d/1vGIYgOy7HBq8OpqTmUyGze7jjKxZcJ_q" alt="โลโก้วิทยาลัย" class="w-10 h-10 md:w-12 md:h-12 object-contain rounded-md">
                     </div>
                     <div>
-                        <h3 class="text-white text-lg font-bold leading-tight">งานวัดผลและประเมินผล</h3>
-                        <p class="text-amber-400 text-sm font-medium">วิทยาลัยพณิชยการเชตุพน</p>
+                        <h3 class="text-white text-base md:text-lg font-bold leading-tight whitespace-nowrap">งานวัดผลและประเมินผล</h3>
+                        <p class="text-amber-400 text-xs md:text-sm font-medium whitespace-nowrap">วิทยาลัยพณิชยการเชตุพน</p>
                     </div>
                 </div>
+                <button type="button" id="footer-toggle" class="md:hidden flex items-center gap-1 text-xs font-bold text-slate-300 border border-slate-700 hover:border-amber-500 hover:text-amber-400 rounded-full pl-3 pr-2 py-1.5 transition-colors flex-shrink-0" aria-expanded="false" aria-controls="footer-more">
+                    <span id="footer-toggle-label">เพิ่มเติม</span>
+                    <i data-lucide="chevron-down" class="footer-chevron w-4 h-4 transition-transform"></i>
+                </button>
             </div>
+
+            <!-- ข้อมูลอื่น ๆ: ซ่อนบนมือถือจนกว่าจะกดเปิด (จอคอมแสดงเป็นคอลัมน์ตามปกติ) -->
+            <div id="footer-more" class="footer-collapsible hidden md:contents">
             
             <!-- คอลัมน์ที่ 2: ลิงก์ที่เกี่ยวข้อง (จัดระเบียบใหม่) -->
-            <div>
+            <div class="mt-5 md:mt-0">
                 <h3 class="text-white text-lg font-bold mb-5 border-b border-slate-700 pb-2 inline-block">ลิงก์ที่เกี่ยวข้อง</h3>
                 <ul class="space-y-3 text-sm">
                     <li>
@@ -253,7 +305,7 @@
             </div>
 
             <!-- คอลัมน์ที่ 3: ติดต่อเรา (ข้อมูลสำคัญที่ควรมี) -->
-            <div>
+            <div class="mt-6 md:mt-0">
                 <h3 class="text-white text-lg font-bold mb-5 border-b border-slate-700 pb-2 inline-block">ติดต่อหน่วยงาน</h3>
                 <ul class="space-y-3 text-sm text-slate-400">
                     <li class="flex items-start">
@@ -270,10 +322,11 @@
                     </li>
                 </ul>
             </div>
+            </div>
         </div>
         
-        <!-- ส่วนล่างสุด -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-6 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500">
+        <!-- ส่วนล่างสุด (บนมือถือแสดงเมื่อกดเปิดข้อมูลเพิ่มเติม) -->
+        <div class="footer-collapsible hidden md:flex max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 md:mt-12 pt-4 md:pt-6 border-t border-slate-800 flex-col md:flex-row justify-between items-center text-xs text-slate-500">
             <p>งานวัดผลและประเมินผล ฝ่ายวิชาการ วิทยาลัยพณิชยการเชตุพน &copy; 2026</p>
         </div>
     </footer>

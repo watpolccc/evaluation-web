@@ -1,13 +1,21 @@
 body {
     font-family: 'Sarabun', sans-serif;
     scroll-behavior: smooth;
-     /* ======================================================= */
-    /* 🖤 ฟิลเตอร์โทนสีเทา (Grayscale Filter) สำหรับช่วงไว้ทุกข์ */
-    /* หากต้องการให้บราวเซอร์แสดงสีปกติ ให้ลบหรือคอมเมนต์ 2 บรรทัดด้านล่างนี้ออก */
-    /* ======================================================= */
-    filter: grayscale(70%);
-    -webkit-filter: grayscale(70%);
 }
+
+/* ======================================================= */
+/* 🖤 โหมดไว้อาลัย (Mourning Mode)                          */
+/* เปิด/ปิดที่แท็ก <html class="mourning"> ใน index.html     */
+/* ======================================================= */
+:root {
+    --mourning-grayscale: 70%; /* ความเข้มของโทนเทา 0% = สีปกติ, 100% = ขาวดำทั้งหมด */
+}
+html.mourning {
+    -webkit-filter: grayscale(var(--mourning-grayscale));
+    filter: grayscale(var(--mourning-grayscale));
+}
+.mourning-ribbon { display: none; }
+html.mourning .mourning-ribbon { display: block; }
 /* รูปแบบพื้นหลังแบนเนอร์สไตล์ทางการศึกษา */
 .hero-pattern {
     background-color: #1e3a8a;
@@ -32,4 +40,65 @@ body {
     background-color: #f0fdf4;
     border-left: 4px solid #d97706;
     font-weight: 600;
+}
+
+/* ================= ภาพปกและภาพประกอบ (Covers & Imagery) ================= */
+/* ลวดลายจาง ๆ บนภาพแทน (fallback) เมื่อไม่มีรูป */
+.hero-pattern-soft {
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M20 18v-4h-2v4h-4v2h4v4h2v-4h4v-2z'/%3E%3C/g%3E%3C/svg%3E");
+}
+.cover-img {
+    transition: opacity .35s ease, transform .5s ease;
+}
+.group:hover .cover-img,
+a:hover > .cover-frame .cover-img {
+    transform: scale(1.04);
+}
+/* ภาพย่อขนาดเล็กในรายการเอกสารหน้าแรก: ซ่อนข้อความ ใช้แค่ไอคอนเล็ก */
+.cover-mini i {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    margin: 0 !important;
+}
+.cover-mini span { display: none; }
+
+/* ส่วนหัวแบบมีภาพพื้นหลัง (ตั้งค่าที่ CONFIG.heroImageUrl) */
+#home-hero.hero-photo {
+    background-size: cover;
+    background-position: center 60%; /* เน้นตัวอาคารวิทยาลัยกลางภาพ */
+}
+
+
+/* สวิตช์เปิด-ปิดโหมดไว้อาลัยบนแถบเมนู (สถานะอ้างอิงจาก html.mourning) */
+.switch-track {
+    position: relative;
+    width: 2.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background-color: #cbd5e1;
+    transition: background-color .2s ease;
+    flex-shrink: 0;
+}
+.switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background-color: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,.25);
+    transition: transform .2s ease;
+}
+html.mourning .mourning-toggle { color: #111827; border-color: #111827; }
+html.mourning .switch-track { background-color: #111827; }
+html.mourning .switch-thumb { transform: translateX(1rem); }
+.mourning-toggle:focus-visible { outline: 2px solid #1e3a8a; outline-offset: 2px; }
+
+/* หัวหน้าข่าว/เอกสาร/สถิติ ที่ล็อกติดใต้แถบเมนู — เพิ่มเงาเมื่อกำลังลอยทับเนื้อหา */
+.page-header {
+    transition: box-shadow .2s ease;
+}
+.page-header.is-stuck {
+    box-shadow: 0 10px 12px -12px rgba(15, 23, 42, .35);
 }

@@ -4,8 +4,14 @@ lucide.createIcons();
 // 🔗 URL ปลายทางของ Google Apps Script Web App (API ดักข้อมูลจาก Sheet)
 // **ให้นำรหัส Web App ID ที่ได้จากการสั่งเผยแพร่มาวางในเครื่องหมายคำพูดด้านล่างนี้ได้เลยครับ**
 const CONFIG = Object.freeze({
-    apiUrl: "https://script.google.com/macros/s/AKfycbxKpd52p4VWbwA70ZCsfyBrmy5gqn0UmqBnGR3uUptunSk8e4RasE8IoKq_60JfqQyuig/exec",
-    requestTimeoutMs: 15000
+    apiUrl: "https://script.google.com/macros/s/AKfycbwxsIujAMe2DEQw9F9gqObNK171XoKD71qUfCyg2LikJoiPQvHX31CUA3ES_FhxlCbR/exec",
+    requestTimeoutMs: 15000,
+    // 🖼️ ภาพพื้นหลังส่วนหัวหน้าแรก ใส่ได้ทั้งไฟล์ในเว็บ (assets/img/...) ลิงก์ Google Drive หรือ URL รูป
+    // เว้นว่างไว้ = ใช้พื้นหลังลวดลายสีน้ำเงินแบบเดิม
+    // ภาพปัจจุบัน: ภาพมุมสูงวิทยาลัยจาก chetupon.ac.th (ตัดโลโก้มุมซ้ายบนออกแล้ว)
+    heroImageUrl: "assets/img/hero-campus.jpg",
+    // 🖼️ รูปแทนสำหรับข่าวที่ไม่มีรูปหรือรูปโหลดไม่ได้ (ตราวิทยาลัย)
+    newsFallbackImage: "assets/img/college-emblem.png"
 });
 
 // ตัวแปรเก็บสะสมข้อมูลทั้งหมดที่โหลดผ่าน API มาเก็บไว้ใน Client
@@ -29,24 +35,44 @@ function asText(value) {
     return value == null ? '' : String(value).trim();
 }
 
-function normalizeNewsItem(item = {}) {
-    return {
-        title: asText(item.title),
-        date: asText(item.date),
-        type: asText(item.type),
-        link: asText(item.link)
-    };
+// ป้องกันข้อความจาก Google Sheet ถูกตีความเป็น HTML/สคริปต์
+function escapeHtml(value) {
+    return asText(value).replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
 }
 
-function normalizeDocumentItem(item = {}) {
-    return {
-        name: asText(item.name),
-        category: asText(item.category),
-        link1: asText(item.link1),
-        type1: asText(item.type1),
-        link2: asText(item.link2),
-        type2: asText(item.type2)
-    };
+// อนุญาตเฉพาะลิงก์ http/https เท่านั้น
+function safeUrl(value) {
+    const url = asText(value);
+    if (!url || url === '#') return '';
+    try {
+        const parsedUrl = new URL(url);
+        return ['http:', 'https:'].includes(parsedUrl.protocol) ? parsedUrl.href : '';
+    } catch {
+        return '';
+    }
+}
+
+// ดึง File ID จากลิงก์ไฟล์ Google Drive / Docs / Sheets / Slides (ไม่รวมลิงก์โฟลเดอร์)
+function getDriveFileId(url) {
+    const patterns = [
+        /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
+        /drive\.google\.com\/(?:open|uc)\?(?:[^#]*&)?id=([a-zA-Z0-9_-]+)/,
+        /docs\.google\.com\/(?:document|spreadsheets|presentation)\/d\/(?!e\/)([a-zA-Z0-9_-]+)/
+    ];
+    for (const pattern of patterns) {
+        const match = asText(url).match(pattern);
+        if (match) return match[1];
+    }
+    return '';
+}
+
+// สร้างภาพตัวอย่าง (หน้าแรกของไฟล์) จากลิงก์ Google Drive โดยอัตโนมัติ
+// ไฟล์ต้องแชร์แบบ "ทุกคนที่มีลิงก์" จึงจะแสดงภาพได้
+function driveThumbnail(url, width = 800) {
+    const fileId = getDriveFileId(url);
+    return fileId ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w${width}` : '';
 }
 
 function normalizeImageUrl(value) {
@@ -54,26 +80,45 @@ function normalizeImageUrl(value) {
     if (!imageUrl || imageUrl === '#') return '';
 
     // แปลงลิงก์หน้า Preview/Share ของ Google Drive เป็นลิงก์รูปสำหรับ <img>
-    const drivePatterns = [
-        /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
-        /drive\.google\.com\/(?:open|uc)\?(?:[^#]*&)?id=([a-zA-Z0-9_-]+)/,
-        /[?&]id=([a-zA-Z0-9_-]+)/
-    ];
+    const driveImage = driveThumbnail(imageUrl, 1200);
+    if (driveImage) return driveImage;
 
-    for (const pattern of drivePatterns) {
-        const match = imageUrl.match(pattern);
-        if (match) {
-            return `https://drive.google.com/thumbnail?id=${encodeURIComponent(match[1])}&sz=w1200`;
-        }
+    const idMatch = imageUrl.match(/google\.com\/.*[?&]id=([a-zA-Z0-9_-]+)/);
+    if (idMatch) {
+        return `https://drive.google.com/thumbnail?id=${encodeURIComponent(idMatch[1])}&sz=w1200`;
     }
 
     // ป้องกันค่าที่ไม่ใช่ URL ถูกนำไปใช้เป็น src
-    try {
-        const parsedUrl = new URL(imageUrl);
-        return ['http:', 'https:'].includes(parsedUrl.protocol) ? parsedUrl.href : '';
-    } catch {
-        return '';
-    }
+    return safeUrl(imageUrl);
+}
+
+function normalizeNewsItem(item = {}) {
+    const link = asText(item.link);
+    // ใช้รูปจากคอลัมน์ imageUrl ก่อน หากไม่มีจะใช้หน้าแรกของไฟล์แนบจาก Drive
+    const imageUrl = normalizeImageUrl(item.imageUrl || item.imageURL || item.image);
+    return {
+        title: asText(item.title),
+        date: asText(item.date),
+        type: asText(item.type),
+        link,
+        cover: imageUrl || driveThumbnail(link)
+    };
+}
+
+function normalizeDocumentItem(item = {}) {
+    const link1 = asText(item.link1);
+    const link2 = asText(item.link2);
+    // ใช้รูปจากคอลัมน์ thumbnail ก่อน หากไม่มีจะใช้หน้าแรกของไฟล์จาก Drive
+    const thumbnail = normalizeImageUrl(item.thumbnail || item.imageUrl || item.image);
+    return {
+        name: asText(item.name),
+        category: asText(item.category),
+        link1,
+        type1: asText(item.type1),
+        link2,
+        type2: asText(item.type2),
+        cover: thumbnail || driveThumbnail(link1, 600) || driveThumbnail(link2, 600)
+    };
 }
 
 function normalizeStatsItem(item = {}) {
@@ -83,6 +128,111 @@ function normalizeStatsItem(item = {}) {
         link: asText(item.link),
         imageUrl: normalizeImageUrl(item.imageUrl || item.imageURL || item.image)
     };
+}
+
+// ================= ชุดสร้างภาพประกอบ (Visual Helpers) =================
+
+// ลักษณะภาพแทนตามชนิดไฟล์ ใช้เมื่อไม่มีภาพตัวอย่าง
+function getFileVisual(format) {
+    const f = asText(format).toUpperCase();
+    if (f.includes('PDF')) return { icon: 'file-text', label: 'PDF', bg: 'from-red-500 to-rose-700' };
+    if (f.includes('XLS') || f.includes('EXCEL') || f.includes('CSV')) return { icon: 'file-spreadsheet', label: 'Excel', bg: 'from-emerald-500 to-emerald-700' };
+    if (f.includes('DOC') || f.includes('WORD')) return { icon: 'file-type-2', label: 'Word', bg: 'from-blue-500 to-blue-800' };
+    return { icon: 'file', label: '', bg: 'from-slate-500 to-slate-700' };
+}
+
+// ภาพปก: แสดงรูปจริงเมื่อโหลดได้ หากโหลดไม่ได้จะเหลือภาพแทน (fallback) ที่วางอยู่ด้านหลัง
+// fallbackSrc: รูปสำรองเมื่อไม่มีรูปหรือรูปหลักโหลดไม่ได้ (เช่น ตราวิทยาลัยสำหรับข่าว)
+function coverHtml({ src, alt = '', icon = 'image', label = '', bg = 'from-blue-800 to-blue-950', sizeClass = 'aspect-video', position = 'object-top', lazy = true, fallbackSrc = '' }) {
+    let imageSrc = safeUrl(src);
+    const fallback = fallbackSrc ? new URL(fallbackSrc, window.location.href).href : '';
+    if (!imageSrc && fallback) {
+        imageSrc = fallback;
+        position = 'object-center';
+    }
+    const errorHandler = fallback && imageSrc !== fallback
+        ? `this.onerror=function(){this.remove()};this.classList.replace('${position}','object-center');this.src='${fallback}'`
+        : 'this.remove()';
+    return `
+        <div class="cover-frame relative ${sizeClass} overflow-hidden bg-gradient-to-br ${bg}">
+            <div class="absolute inset-0 hero-pattern-soft"></div>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-white/90">
+                <i data-lucide="${icon}" class="w-10 h-10 mb-1"></i>
+                ${label ? `<span class="text-xs font-bold tracking-wider">${escapeHtml(label)}</span>` : ''}
+            </div>
+            ${imageSrc ? `<img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(alt)}" loading="${lazy ? 'lazy' : 'eager'}" referrerpolicy="no-referrer"
+                class="cover-img absolute inset-0 w-full h-full object-cover ${position} bg-white opacity-0"
+                onload="this.classList.remove('opacity-0')" onerror="${escapeHtml(errorHandler)}">` : ''}
+        </div>`;
+}
+
+// ภาพประกอบเมื่อไม่มีข้อมูล (Empty State)
+function emptyStateHtml(message, icon = 'inbox') {
+    return `
+        <div class="col-span-full py-14 flex flex-col items-center text-center text-slate-400">
+            <svg viewBox="0 0 200 140" class="w-44 h-auto mb-4" aria-hidden="true">
+                <ellipse cx="100" cy="128" rx="70" ry="8" fill="#e2e8f0"/>
+                <rect x="45" y="30" width="80" height="92" rx="10" fill="#fff" stroke="#cbd5e1" stroke-width="3"/>
+                <rect x="75" y="18" width="80" height="92" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="3"/>
+                <rect x="88" y="38" width="54" height="6" rx="3" fill="#bfdbfe"/>
+                <rect x="88" y="52" width="40" height="6" rx="3" fill="#bfdbfe"/>
+                <rect x="88" y="66" width="48" height="6" rx="3" fill="#bfdbfe"/>
+                <circle cx="150" cy="96" r="16" fill="#fbbf24"/>
+                <path d="M143 96h14M150 89v14" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <p class="font-medium flex items-center"><i data-lucide="${icon}" class="w-4 h-4 mr-1.5"></i>${escapeHtml(message)}</p>
+        </div>`;
+}
+
+// ป้ายประเภทข่าว — หากคอลัมน์ type เป็นชนิดไฟล์ (PDF/Word) จะแสดงเป็น "ประกาศ"
+function getNewsBadge(type) {
+    const value = asText(type);
+    const isFileFormat = /^(pdf|docx?|xlsx?|word|excel|jpe?g|png|gif|web|website|video|link|ไฟล์.*|ลิงก์.*)$/i.test(value);
+    const label = !value || isFileFormat ? 'ประกาศ' : value;
+    let color = 'bg-blue-100 text-blue-800 border-blue-200';
+    if (label === 'ด่วน') color = 'bg-red-100 text-red-800 border-red-200';
+    else if (label === 'ข่าวสาร') color = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    return `<span class="px-2.5 py-1 rounded-lg text-xs font-bold border ${color}">${escapeHtml(label)}</span>`;
+}
+
+// ภาพแทนของข่าว เลือกไอคอนตามชนิดของลิงก์แนบ
+function getNewsVisual(item) {
+    const type = asText(item.type).toUpperCase();
+    const link = asText(item.link);
+    if (type.includes('VIDEO') || /youtu\.?be/.test(link)) return { icon: 'play-circle', label: 'วิดีโอ', bg: 'from-rose-600 to-red-800' };
+    if (/drive\.google\.com\/drive\/folders/.test(link)) return { icon: 'folder-open', label: 'โฟลเดอร์เอกสาร', bg: 'from-amber-500 to-amber-700' };
+    if (/JPE?G|PNG|GIF|IMAGE|รูป/.test(type)) return { icon: 'image', label: 'รูปภาพ', bg: 'from-sky-600 to-blue-800' };
+    if (type.includes('WEB') || (link && !getDriveFileId(link))) return { icon: 'globe', label: 'เว็บไซต์', bg: 'from-indigo-600 to-blue-900' };
+    if (type.includes('PDF')) return { icon: 'file-text', label: 'เอกสาร PDF', bg: 'from-blue-800 to-blue-950' };
+    return { icon: 'megaphone', label: 'ข่าวประชาสัมพันธ์', bg: 'from-blue-800 to-blue-950' };
+}
+
+function newsCover(item, sizeClass = 'aspect-video', lazy = true) {
+    const visual = getNewsVisual(item);
+    // ข่าวที่ไม่มีรูป/รูปโหลดไม่ได้ จะแสดงตราวิทยาลัยแบบเดียวกับการ์ดในหน้าข้อมูลสถิติ
+    return coverHtml({ src: item.cover, alt: item.title, icon: visual.icon, label: visual.label, bg: visual.bg, sizeClass, lazy, fallbackSrc: CONFIG.newsFallbackImage });
+}
+
+function docCover(doc, sizeClass = 'h-44') {
+    const visual = getFileVisual(doc.type1 || doc.type2);
+    return coverHtml({ src: doc.cover, alt: doc.name, icon: visual.icon, label: visual.label, bg: visual.bg, sizeClass });
+}
+
+// ส่วนหัวหน้าแรก: ใส่ภาพพื้นหลังจาก CONFIG.heroImageUrl (ถ้ามี)
+function renderHero() {
+    const hero = document.getElementById('home-hero');
+    // รองรับทั้งไฟล์ในเว็บ (path) และ URL เต็ม
+    let heroImage = '';
+    try {
+        heroImage = CONFIG.heroImageUrl ? normalizeImageUrl(new URL(CONFIG.heroImageUrl, window.location.href).href) : '';
+    } catch {
+        heroImage = '';
+    }
+    if (hero && heroImage) {
+        hero.style.backgroundImage = `linear-gradient(180deg, rgba(23,37,84,.82) 0%, rgba(30,58,138,.68) 100%), url("${heroImage.replace(/"/g, '%22')}")`;
+        hero.classList.add('hero-photo');
+    }
+
 }
 
 function normalizeApiResponse(result) {
@@ -204,6 +354,54 @@ function navigate(pageId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ================= สวิตช์โหมดไว้อาลัย (Mourning Mode Toggle) =================
+// ค่าเริ่มต้นมาจาก <html class="mourning"> ใน index.html และจำค่าที่ผู้เข้าชมเลือกไว้ใน localStorage
+function updateMourningToggles() {
+    const isOn = document.documentElement.classList.contains('mourning');
+    document.querySelectorAll('.mourning-toggle').forEach(btn => {
+        btn.setAttribute('aria-checked', String(isOn));
+        btn.title = isOn ? 'ปิดโหมดไว้อาลัย (แสดงสีปกติ)' : 'เปิดโหมดไว้อาลัย (โทนสีเทา)';
+    });
+}
+
+function toggleMourningMode() {
+    const isOn = document.documentElement.classList.toggle('mourning');
+    try {
+        localStorage.setItem('mourningMode', isOn ? 'on' : 'off');
+    } catch {
+        // เบราว์เซอร์ไม่อนุญาตให้บันทึก — สลับได้เฉพาะหน้านี้
+    }
+    updateMourningToggles();
+}
+
+document.querySelectorAll('.mourning-toggle').forEach(btn => {
+    btn.addEventListener('click', toggleMourningMode);
+});
+updateMourningToggles();
+
+// เพิ่มเงาให้หัวหน้าที่ล็อกไว้ เมื่อเนื้อหาเลื่อนผ่านด้านล่าง
+function updateStickyHeaders() {
+    const navHeight = document.querySelector('nav')?.offsetHeight || 80;
+    document.querySelectorAll('.page-header').forEach(header => {
+        const isStuck = header.offsetParent !== null && header.getBoundingClientRect().top <= navHeight + 1 && window.scrollY > 0;
+        header.classList.toggle('is-stuck', isStuck);
+    });
+}
+window.addEventListener('scroll', updateStickyHeaders, { passive: true });
+
+// ================= Footer แบบย่อ/ขยายบนมือถือ =================
+document.getElementById('footer-toggle')?.addEventListener('click', function () {
+    const isOpen = this.getAttribute('aria-expanded') === 'true';
+    // คลาส hidden มีผลเฉพาะมือถือ จอคอมใช้ md:contents / md:flex แสดงตลอด
+    document.querySelectorAll('.footer-collapsible').forEach(el => el.classList.toggle('hidden', isOpen));
+    this.setAttribute('aria-expanded', String(!isOpen));
+    document.getElementById('footer-toggle-label').textContent = isOpen ? 'เพิ่มเติม' : 'ซ่อน';
+    this.querySelector('.footer-chevron')?.classList.toggle('rotate-180', !isOpen);
+    if (!isOpen) {
+        document.getElementById('footer-more').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+});
+
 // จัดการกดปุ่มเมนูบนแถบมือถือ
 document.getElementById('mobile-menu-btn').addEventListener('click', function() {
     document.getElementById('mobile-menu').classList.toggle('hidden');
@@ -212,6 +410,7 @@ document.getElementById('mobile-menu-btn').addEventListener('click', function() 
 // ดึงชุดข้อมูลทั้งหมดเมื่อเปิดหน้าเว็บ
 document.addEventListener('DOMContentLoaded', () => {
     navigate('home');
+    renderHero(); // แสดงภาพพื้นหลังส่วนหัวทันที ไม่ต้องรอข้อมูลจาก API
     setDataStatus('กำลังโหลดข้อมูลจากระบบ…', 'info');
     initiateDataFetch();
 });
@@ -262,76 +461,86 @@ function setupCategoryFilters() {
 
 // ================= เรนเดอร์หน้าแรก (Home Rendering) =================
 function renderHomePage() {
-    // 1. เรนเดอร์ข่าวสารล่าสุด 3 ชิ้นแรก
-    const newsContainer = document.getElementById('home-news-container');
-    newsContainer.innerHTML = '';
-    
-    const latestNews = localNewsData.slice(0, 3);
-    if (latestNews.length === 0) {
-        newsContainer.innerHTML = `<div class="col-span-full text-center text-slate-400 py-6">ไม่มีประกาศข่าวในตอนนี้</div>`;
-    } else {
-        latestNews.forEach(item => {
-            let badgeColor = "bg-blue-100 text-blue-800 border-blue-200";
-            if (item.type === "ด่วน") badgeColor = "bg-red-100 text-red-800 border-red-200";
-            else if (item.type === "ข่าวสาร") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-200";
+    renderHero();
 
-            const hasLink = item.link && item.link.trim() !== "" && item.link !== "#";
-            const cardContent = `
-                <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer flex flex-col justify-between h-full min-h-[160px]">
-                    <div>
-                        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold border ${badgeColor}">${item.type || 'ประกาศ'}</span>
-                            <span class="text-xs text-slate-400 flex items-center font-medium"><i data-lucide="calendar" class="w-3.5 h-3.5 mr-1 text-slate-300"></i> ${item.date || '-'}</span>
-                        </div>
-                        <h3 class="font-bold text-slate-800 text-md leading-relaxed break-words">${item.title}</h3>
-                    </div>
-                    ${hasLink ? `
-                    <a href="${item.link}" target="_blank" class="mt-4 text-blue-700 hover:text-blue-900 text-xs font-bold flex items-center">
-                        อ่านรายละเอียดเพิ่มเติม <i data-lucide="external-link" class="w-3.5 h-3.5 ml-1"></i>
-                    </a>` : ''}
+    // 1. ข่าวเด่น 1 ชิ้น (ภาพใหญ่) + ข่าวรอง 2 ชิ้น
+    const newsContainer = document.getElementById('home-news-container');
+    const latestNews = localNewsData.slice(0, 3);
+
+    if (latestNews.length === 0) {
+        newsContainer.innerHTML = emptyStateHtml('ไม่มีประกาศข่าวในตอนนี้', 'megaphone');
+    } else {
+        newsContainer.innerHTML = latestNews.map((item, index) => {
+            const link = safeUrl(item.link);
+            const tag = link ? 'a' : 'div';
+            const linkAttrs = link ? `href="${escapeHtml(link)}" target="_blank" rel="noopener"` : '';
+            const meta = `
+                <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    ${getNewsBadge(item.type)}
+                    <span class="text-xs text-slate-400 flex items-center font-medium"><i data-lucide="calendar" class="w-3.5 h-3.5 mr-1 text-slate-300"></i> ${escapeHtml(item.date) || '-'}</span>
                 </div>`;
-            newsContainer.innerHTML += cardContent;
-        });
+            const more = link ? `
+                <span class="mt-4 text-blue-700 group-hover:text-blue-900 text-xs font-bold flex items-center">
+                    อ่านรายละเอียดเพิ่มเติม <i data-lucide="external-link" class="w-3.5 h-3.5 ml-1"></i>
+                </span>` : '';
+
+            // ข่าวเด่น: ภาพซ้าย-เนื้อหาขวา บนจอใหญ่
+            if (index === 0) {
+                return `
+                    <${tag} ${linkAttrs} class="group col-span-full bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-all overflow-hidden grid grid-cols-1 md:grid-cols-5">
+                        <div class="md:col-span-3 relative">
+                            ${newsCover(item, 'aspect-video md:aspect-auto md:h-full md:min-h-[260px]', false)}
+                            <span class="absolute top-3 left-3 bg-amber-500 text-slate-950 text-xs font-bold px-3 py-1 rounded-full shadow flex items-center">
+                                <i data-lucide="star" class="w-3.5 h-3.5 mr-1"></i> ข่าวล่าสุด
+                            </span>
+                        </div>
+                        <div class="md:col-span-2 p-6 flex flex-col justify-center">
+                            ${meta}
+                            <h3 class="font-bold text-slate-800 text-lg md:text-xl leading-relaxed break-words line-clamp-4">${escapeHtml(item.title)}</h3>
+                            ${more}
+                        </div>
+                    </${tag}>`;
+            }
+
+            return `
+                <${tag} ${linkAttrs} class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col h-full hover:-translate-y-1">
+                    ${newsCover(item)}
+                    <div class="p-5 flex flex-col flex-grow">
+                        ${meta}
+                        <h3 class="font-bold text-slate-800 text-md leading-relaxed break-words line-clamp-3 flex-grow">${escapeHtml(item.title)}</h3>
+                        ${more}
+                    </div>
+                </${tag}>`;
+        }).join('');
     }
 
-    // 2. เรนเดอร์เอกสารด่วนล่าสุด 3-5 รายการที่หน้าแรก
+    // 2. เอกสารล่าสุด 5 รายการ พร้อมภาพย่อหน้าแรกของไฟล์
     const docsContainer = document.getElementById('home-docs-container');
-    docsContainer.innerHTML = '';
-
     const latestDocs = localDocsData.slice(0, 5);
+
     if (latestDocs.length === 0) {
         docsContainer.innerHTML = `<li class="text-center text-slate-400 text-sm py-4">ไม่มีเอกสารอัปโหลดด่วน</li>`;
     } else {
-        latestDocs.forEach(doc => {
-            // ตรวจหานามสกุลไฟล์เพื่อติดไอคอนที่เหมาะสม
-            let iconColor = "text-blue-500 bg-blue-50";
-            let iconName = "file-text";
-            
-            const checkType = (doc.type1 || doc.size || '').toLowerCase();
-            if (checkType.includes('pdf')) { iconColor = "text-red-500 bg-red-50"; iconName = "file-code-2"; }
-            else if (checkType.includes('xls') || checkType.includes('excel')) { iconColor = "text-emerald-600 bg-emerald-50"; iconName = "table"; }
-            else if (checkType.includes('doc') || checkType.includes('word')) { iconColor = "text-blue-600 bg-blue-50"; iconName = "file-type-2"; }
-
-            // ดึงปุ่มดาวน์โหลดที่ใช้งานได้ปุ่มแรกมาโชว์หน้าแรก
-            const targetLink = doc.link1 || doc.link || '#';
-
-            docsContainer.innerHTML += `
-                <li class="flex items-start justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
-                    <div class="flex items-start min-w-0 mr-2">
-                        <div class="p-2 rounded-lg ${iconColor} mr-3 flex-shrink-0">
-                            <i data-lucide="${iconName}" class="w-5 h-5"></i>
+        docsContainer.innerHTML = latestDocs.map(doc => {
+            const targetLink = safeUrl(doc.link1 || doc.link2);
+            const visual = getFileVisual(doc.type1 || doc.type2);
+            return `
+                <li class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
+                    <div class="flex items-center min-w-0 mr-2">
+                        <div class="w-11 flex-shrink-0 rounded-md overflow-hidden border border-slate-200 shadow-sm mr-3">
+                            ${coverHtml({ src: doc.cover, alt: doc.name, icon: visual.icon, bg: visual.bg, sizeClass: 'h-14 cover-mini' })}
                         </div>
                         <div class="min-w-0">
-                            <p class="text-xs font-bold text-slate-700 break-words leading-relaxed">${doc.name}</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">${doc.category || 'แบบฟอร์มหลัก'}</p>
+                            <p class="text-xs font-bold text-slate-700 break-words leading-relaxed line-clamp-2">${escapeHtml(doc.name)}</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">${escapeHtml(doc.category || 'แบบฟอร์มหลัก')}</p>
                         </div>
                     </div>
-                    <a href="${targetLink}" target="_blank" class="p-2 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-lg transition-colors flex-shrink-0 ml-1" title="ดาวน์โหลดด่วน">
+                    ${targetLink ? `
+                    <a href="${escapeHtml(targetLink)}" target="_blank" rel="noopener" class="p-2 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-lg transition-colors flex-shrink-0 ml-1" title="ดาวน์โหลดด่วน">
                         <i data-lucide="download" class="w-4 h-4"></i>
-                    </a>
-                </li>
-            `;
-        });
+                    </a>` : ''}
+                </li>`;
+        }).join('');
     }
     lucide.createIcons();
 }
@@ -339,13 +548,13 @@ function renderHomePage() {
 // ================= เรนเดอร์หน้าข่าวสาร 3x3 พร้อมสลับหน้า (News Pagination Render) =================
 function renderNewsPage() {
     const gridContainer = document.getElementById('news-grid-container');
-    gridContainer.innerHTML = '';
 
     // ตรวจนับจำนวนไอเท็มทั้งหมดที่จะเอามาตัดแบ่งจัดหน้า
     const totalItems = filteredNews.length;
     if (totalItems === 0) {
-        gridContainer.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400">ไม่พบประกาศข่าวประชาสัมพันธ์ที่ค้นหา</div>`;
+        gridContainer.innerHTML = emptyStateHtml('ไม่พบประกาศข่าวประชาสัมพันธ์ที่ค้นหา', 'search-x');
         document.getElementById('news-pagination').innerHTML = '';
+        lucide.createIcons();
         return;
     }
 
@@ -354,29 +563,25 @@ function renderNewsPage() {
     const endIndex = Math.min(startIndex + newsItemsPerPage, totalItems);
     const pageItems = filteredNews.slice(startIndex, endIndex);
 
-    // จัดแสดงตามกล่องข่าว Grid 3x3
-    pageItems.forEach(item => {
-        let badgeColor = "bg-blue-100 text-blue-800 border-blue-200";
-        if (item.type === "ด่วน") badgeColor = "bg-red-100 text-red-800 border-red-200";
-        else if (item.type === "ข่าวสาร") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-200";
-
-        const hasLink = item.link && item.link.trim() !== "" && item.link !== "#";
-        gridContainer.innerHTML += `
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between min-h-[240px] hover:-translate-y-1">
-                <div>
-                    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-                        <span class="px-3 py-1 rounded-lg text-xs font-bold border ${badgeColor}">${item.type || 'ประกาศ'}</span>
-                        <span class="text-xs text-slate-400 flex items-center font-medium"><i data-lucide="calendar" class="w-4 h-4 mr-1 text-slate-300"></i> ${item.date || '-'}</span>
+    // จัดแสดงตามกล่องข่าว Grid 3x3 (ภาพปกด้านบน เนื้อหาด้านล่าง)
+    gridContainer.innerHTML = pageItems.map(item => {
+        const link = safeUrl(item.link);
+        return `
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden hover:-translate-y-1">
+                ${link ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener" class="block">${newsCover(item)}</a>` : newsCover(item)}
+                <div class="p-5 flex flex-col flex-grow">
+                    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                        ${getNewsBadge(item.type)}
+                        <span class="text-xs text-slate-400 flex items-center font-medium"><i data-lucide="calendar" class="w-4 h-4 mr-1 text-slate-300"></i> ${escapeHtml(item.date) || '-'}</span>
                     </div>
-                    <h3 class="font-bold text-slate-800 text-md leading-relaxed break-words">${item.title}</h3>
+                    <h3 class="font-bold text-slate-800 text-md leading-relaxed break-words flex-grow">${escapeHtml(item.title)}</h3>
+                    ${link ? `
+                    <a href="${escapeHtml(link)}" target="_blank" rel="noopener" class="w-fit mt-4 text-blue-700 hover:text-blue-900 text-sm font-bold flex items-center hover:underline">
+                        อ่านประกาศฉบับเต็ม <i data-lucide="external-link" class="w-4 h-4 ml-1"></i>
+                    </a>` : `<div class="text-slate-300 text-xs mt-4">ไม่มีลิงก์แนบ</div>`}
                 </div>
-                ${hasLink ? `
-                <a href="${item.link}" target="_blank" class="w-fit mt-5 text-blue-700 hover:text-blue-900 text-sm font-bold flex items-center hover:underline">
-                    อ่านประกาศฉบับเต็ม <i data-lucide="external-link" class="w-4 h-4 ml-1"></i>
-                </a>` : `<div class="text-slate-300 text-xs mt-5">ไม่มีลิงก์แนบแนบ</div>`}
-            </div>
-        `;
-    });
+            </div>`;
+    }).join('');
 
     // สร้างปุ่มสลับหน้าด้านล่าง (Footer Pagination)
     const totalPages = Math.ceil(totalItems / newsItemsPerPage);
@@ -404,12 +609,12 @@ function handleNewsSearch() {
 // ================= เรนเดอร์หน้าดาวน์โหลดเอกสาร 3x3 (Documents Render & Double Button) =================
 function renderDocumentsPage() {
     const gridContainer = document.getElementById('doc-grid-container');
-    gridContainer.innerHTML = '';
 
     const totalItems = filteredDocs.length;
     if (totalItems === 0) {
-        gridContainer.innerHTML = `<div class="col-span-full py-20 text-center text-slate-400">ไม่พบเอกสารดาวน์โหลดในหมวดหมู่ที่ระบุ</div>`;
+        gridContainer.innerHTML = emptyStateHtml('ไม่พบเอกสารดาวน์โหลดในหมวดหมู่ที่ระบุ', 'folder-open');
         document.getElementById('doc-pagination').innerHTML = '';
+        lucide.createIcons();
         return;
     }
 
@@ -419,65 +624,60 @@ function renderDocumentsPage() {
     const pageItems = filteredDocs.slice(startIndex, endIndex);
 
     // วนลูปแสดงผลเอกสารแต่ละรายการ
-    pageItems.forEach(doc => {
-        // วิเคราะห์ปุ่มดาวน์โหลด (กรณีมีไฟล์ PDF + Word/Excel ในคอลัมน์ของชีทเดียว)
-        // ตรวจเช็คว่ามี link1 และ link2 หรือไม่ หากไม่มีจะมองหา link ธรรมดา
-        const hasLink1 = doc.link1 && doc.link1.trim() !== "" && doc.link1 !== "#";
-        const hasLink2 = doc.link2 && doc.link2.trim() !== "" && doc.link2 !== "#";
-        const hasFallbackLink = doc.link && doc.link.trim() !== "" && doc.link !== "#";
+    gridContainer.innerHTML = pageItems.map(doc => {
+        const link1 = safeUrl(doc.link1);
+        const link2 = safeUrl(doc.link2);
 
         // จัดเตรียมปุ่มดาวน์โหลด HTML
         let downloadButtonsHTML = '';
 
         // เคสที่ 1: มีทั้งสองลิงก์ (ปุ่มดาวน์โหลดคู่ PDF / Word-Excel)
-        if (hasLink1 && hasLink2) {
+        if (link1 && link2) {
             const btn1Style = getButtonStyle(doc.type1 || 'PDF');
             const btn2Style = getButtonStyle(doc.type2 || 'Word');
 
             downloadButtonsHTML = `
-                <div class="grid grid-cols-2 gap-2 mt-5">
-                    <a href="${doc.link1}" target="_blank" class="${btn1Style.class} flex items-center justify-center py-2.5 px-3 rounded-xl font-bold text-xs transition-colors hover:scale-[1.02] duration-150">
-                        <i data-lucide="${btn1Style.icon}" class="w-4 h-4 mr-1.5 flex-shrink-0"></i> โหลด ${btn1Style.label}
+                <div class="grid grid-cols-2 gap-2 mt-4">
+                    <a href="${escapeHtml(link1)}" target="_blank" rel="noopener" class="${btn1Style.class} flex items-center justify-center py-2.5 px-3 rounded-xl font-bold text-xs transition-colors hover:scale-[1.02] duration-150">
+                        <i data-lucide="${btn1Style.icon}" class="w-4 h-4 mr-1.5 flex-shrink-0"></i> โหลด ${escapeHtml(btn1Style.label)}
                     </a>
-                    <a href="${doc.link2}" target="_blank" class="${btn2Style.class} flex items-center justify-center py-2.5 px-3 rounded-xl font-bold text-xs transition-colors hover:scale-[1.02] duration-150">
-                        <i data-lucide="${btn2Style.icon}" class="w-4 h-4 mr-1.5 flex-shrink-0"></i> โหลด ${btn2Style.label}
+                    <a href="${escapeHtml(link2)}" target="_blank" rel="noopener" class="${btn2Style.class} flex items-center justify-center py-2.5 px-3 rounded-xl font-bold text-xs transition-colors hover:scale-[1.02] duration-150">
+                        <i data-lucide="${btn2Style.icon}" class="w-4 h-4 mr-1.5 flex-shrink-0"></i> โหลด ${escapeHtml(btn2Style.label)}
                     </a>
-                </div>
-            `;
+                </div>`;
         }
-        // เคสที่ 2: มีเพียงลิงก์เดียว หรือเป็นลิงก์เดี่ยวจากระบบเก่า
-        else if (hasLink1 || hasFallbackLink) {
-            const targetLink = hasLink1 ? doc.link1 : doc.link;
-            const formatType = hasLink1 ? (doc.type1 || 'ไฟล์เอกสาร') : (doc.size || 'ไฟล์เอกสาร');
-            const btnStyle = getButtonStyle(formatType);
+        // เคสที่ 2: มีเพียงลิงก์เดียว
+        else if (link1 || link2) {
+            const targetLink = link1 || link2;
+            const btnStyle = getButtonStyle((link1 ? doc.type1 : doc.type2) || 'ไฟล์เอกสาร');
 
             downloadButtonsHTML = `
-                <div class="mt-5">
-                    <a href="${targetLink}" target="_blank" class="${btnStyle.class} w-full flex items-center justify-center py-3 px-4 rounded-xl font-bold text-xs transition-all hover:scale-[1.01] duration-150">
-                        <i data-lucide="${btnStyle.icon}" class="w-4 h-4 mr-1.5"></i> ดาวน์โหลดไฟล์ ${btnStyle.label}
+                <div class="mt-4">
+                    <a href="${escapeHtml(targetLink)}" target="_blank" rel="noopener" class="${btnStyle.class} w-full flex items-center justify-center py-3 px-4 rounded-xl font-bold text-xs transition-all hover:scale-[1.01] duration-150">
+                        <i data-lucide="${btnStyle.icon}" class="w-4 h-4 mr-1.5"></i> ดาวน์โหลดไฟล์ ${escapeHtml(btnStyle.label)}
                     </a>
-                </div>
-            `;
+                </div>`;
         } else {
             downloadButtonsHTML = `
-                <div class="mt-5 py-2.5 text-center text-slate-300 border border-dashed border-slate-100 rounded-xl text-xs font-semibold">
+                <div class="mt-4 py-2.5 text-center text-slate-300 border border-dashed border-slate-100 rounded-xl text-xs font-semibold">
                     ไม่มีไฟล์สำหรับดาวน์โหลด
-                </div>
-            `;
+                </div>`;
         }
 
-        gridContainer.innerHTML += `
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between hover:-translate-y-1 min-h-[190px]">
-                <div class="flex-grow flex flex-col">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-slate-200">${doc.category || 'แบบฟอร์ม'}</span>
-                    </div>
-                    <h3 class="font-bold text-slate-800 text-sm leading-relaxed break-words mb-4 flex-grow">${doc.name}</h3>
+        const previewLink = link1 || link2;
+        const cover = docCover(doc);
+        return `
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden hover:-translate-y-1">
+                <div class="relative border-b border-slate-200">
+                    ${previewLink ? `<a href="${escapeHtml(previewLink)}" target="_blank" rel="noopener" class="block" title="เปิดดูตัวอย่างเอกสาร">${cover}</a>` : cover}
+                    <span class="absolute top-3 left-3 bg-white/95 text-slate-700 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-slate-200 shadow-sm">${escapeHtml(doc.category || 'แบบฟอร์ม')}</span>
                 </div>
-                ${downloadButtonsHTML}
-            </div>
-        `;
-    });
+                <div class="p-5 flex flex-col flex-grow">
+                    <h3 class="font-bold text-slate-800 text-sm leading-relaxed break-words flex-grow">${escapeHtml(doc.name)}</h3>
+                    ${downloadButtonsHTML}
+                </div>
+            </div>`;
+    }).join('');
 
     // สร้าง Pagination
     const totalPages = Math.ceil(totalItems / docItemsPerPage);
@@ -494,9 +694,9 @@ function renderDocumentsPage() {
 function getButtonStyle(format) {
     const f = format.toUpperCase();
     if (f.includes('PDF')) {
-        return { class: "bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-transparent", icon: "file-code-2", label: "PDF" };
+        return { class: "bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-transparent", icon: "file-text", label: "PDF" };
     } else if (f.includes('XLS') || f.includes('EXCEL') || f.includes('CSV')) {
-        return { class: "bg-emerald-50 hover:bg-emerald-600 text-emerald-600 hover:text-white border border-emerald-200 hover:border-transparent", icon: "table", label: "Excel" };
+        return { class: "bg-emerald-50 hover:bg-emerald-600 text-emerald-600 hover:text-white border border-emerald-200 hover:border-transparent", icon: "file-spreadsheet", label: "Excel" };
     } else if (f.includes('DOC') || f.includes('WORD')) {
         return { class: "bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white border border-blue-200 hover:border-transparent", icon: "file-type-2", label: "Word" };
     }
@@ -518,46 +718,34 @@ function handleDocFilter() {
 // ================= เรนเดอร์หน้าข้อมูลสถิติ (Statistics Render) =================
 function renderStatsPage() {
     const container = document.getElementById('stats-grid-container');
-    container.innerHTML = '';
 
     if (localStatsData.length === 0) {
-        container.innerHTML = `
-            <div class="col-span-full bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
-                <i data-lucide="bar-chart-2" class="w-12 h-12 mx-auto mb-3 text-slate-300"></i>
-                <p class="font-bold">ไม่มีข้อมูลรายงานสถิติแสดงในขณะนี้</p>
-            </div>
-        `;
+        container.innerHTML = emptyStateHtml('ไม่มีข้อมูลรายงานสถิติแสดงในขณะนี้', 'bar-chart-2');
+        lucide.createIcons();
         return;
     }
 
-    localStatsData.forEach(stat => {
-        const hasLink = stat.link && stat.link.trim() !== "" && stat.link !== "#";
-        const hasImg = stat.imageUrl && stat.imageUrl.trim() !== "" && stat.imageUrl !== "#";
-
-        container.innerHTML += `
+    container.innerHTML = localStatsData.map(stat => {
+        const link = safeUrl(stat.link);
+        return `
             <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
                 <div>
-                    ${hasImg ? `
-                    <div class="h-48 overflow-hidden bg-slate-100 border-b border-slate-200 flex items-center justify-center">
-                        <img src="${stat.imageUrl}" alt="${stat.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e3a8a/ffffff?text=STATISTICS'">
-                    </div>` : `
-                    <div class="h-12 bg-blue-900 border-b border-slate-200 flex items-center justify-center text-amber-400">
-                        <i data-lucide="bar-chart-2" class="w-5 h-5 mr-1.5"></i> รายงานเชิงสรุป
-                    </div>`}
+                    <div class="border-b border-slate-200">
+                        ${coverHtml({ src: stat.imageUrl, alt: stat.title, icon: 'bar-chart-3', label: 'รายงานเชิงสรุป', sizeClass: 'h-56', position: 'object-center' })}
+                    </div>
                     <div class="p-6">
-                        <h3 class="font-bold text-slate-800 text-lg mb-2">${stat.title}</h3>
-                        <p class="text-slate-500 text-sm leading-relaxed mb-4 break-words">${stat.description || 'ไม่มีคำอธิบายประกอบเพิ่มเติม'}</p>
+                        <h3 class="font-bold text-slate-800 text-lg mb-2">${escapeHtml(stat.title)}</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed mb-4 break-words">${escapeHtml(stat.description || 'ไม่มีคำอธิบายประกอบเพิ่มเติม')}</p>
                     </div>
                 </div>
-                ${hasLink ? `
+                ${link ? `
                 <div class="px-6 pb-6 pt-2 border-t border-slate-100 mt-2">
-                    <a href="${stat.link}" target="_blank" class="w-full bg-blue-900 hover:bg-slate-900 text-white text-center py-3 px-4 rounded-xl font-bold text-xs transition-colors flex items-center justify-center hover:scale-[1.01]">
+                    <a href="${escapeHtml(link)}" target="_blank" rel="noopener" class="w-full bg-blue-900 hover:bg-slate-900 text-white text-center py-3 px-4 rounded-xl font-bold text-xs transition-colors flex items-center justify-center hover:scale-[1.01]">
                         <i data-lucide="search" class="w-4 h-4 mr-1.5"></i> เปิด
                     </a>
                 </div>` : ''}
-            </div>
-        `;
-    });
+            </div>`;
+    }).join('');
     lucide.createIcons();
 }
 
@@ -622,6 +810,9 @@ function activateMockMode() {
             { id: 2, title: "รายงานผลสัมฤทธิ์ระดับโรงเรียน ประจำปีการศึกษา 2566", description: "เอกสารรายงานสรุปส่งออกไปยังสำนักงานเขตพื้นที่การศึกษามัธยมศึกษา มีข้อมูลครบถ้วน", link: "#", imageUrl: "https://placehold.co/600x400/1e3a8a/ffffff?text=Annual+Report" }
         ];
 
+        localNewsData = localNewsData.map(normalizeNewsItem);
+        localDocsData = localDocsData.map(normalizeDocumentItem);
+        localStatsData = localStatsData.map(normalizeStatsItem);
         filteredNews = [...localNewsData];
         filteredDocs = [...localDocsData];
 
