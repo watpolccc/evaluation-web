@@ -44,7 +44,7 @@
     <nav class="bg-white shadow-md sticky top-0 z-50 border-b border-slate-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20">
-                <div class="flex items-center cursor-pointer" onclick="navigate('home')">
+                <a href="#home" class="flex items-center cursor-pointer" onclick="navigate('home'); return false;" aria-label="หน้าแรก งานวัดผลและประเมินผล">
                     <!-- ริบบิ้นไว้ทุกข์ แสดงเฉพาะเมื่อเปิดโหมดไว้อาลัย -->
                     <svg class="mourning-ribbon w-6 h-9 mr-2 flex-shrink-0" viewBox="0 0 40 60" role="img" aria-label="ริบบิ้นไว้ทุกข์">
                         <path fill="#111827" fill-rule="evenodd" d="M20 3C12.5 3 8.5 8.2 8.5 14.5c0 5 2.8 10.2 6 15.3L3.5 56l8.5 2.2L20 39.5l8 18.7 8.5-2.2-11-26.2c3.2-5.1 6-10.3 6-15.3C31.5 8.2 27.5 3 20 3zm0 6.5c3 0 5 2.1 5 5.2 0 3-2 7-5 11.3-3-4.3-5-8.3-5-11.3 0-3.1 2-5.2 5-5.2z"/>
@@ -58,14 +58,14 @@
                         <span class="font-bold text-lg sm:text-xl text-blue-900 tracking-wide block">งานวัดผลและประเมินผล</span>
                         <span class="text-xs text-slate-500 block -mt-1 font-medium">ฝ่ายวิชาการ</span>
                     </div>
-                </div>
+                </a>
                 
                 <!-- เมนูสำหรับจอคอมพิวเตอร์ (Desktop Menu) -->
                 <div class="hidden md:flex items-center space-x-3 lg:space-x-5 h-full">
-                    <a href="#" onclick="navigate('home')" data-target="home" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">หน้าแรก</a>
-                    <a href="#" onclick="navigate('news')" data-target="news" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">ข่าวประชาสัมพันธ์</a>
-                    <a href="#" onclick="navigate('documents')" data-target="documents" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">ดาวน์โหลดเอกสาร</a>
-                    <a href="#" onclick="navigate('stats')" data-target="stats" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">ข้อมูลสถิติ</a>
+                    <a href="#home" onclick="navigate('home'); return false;" data-target="home" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">หน้าแรก</a>
+                    <a href="#news" onclick="navigate('news'); return false;" data-target="news" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">ข่าวประชาสัมพันธ์</a>
+                    <a href="#documents" onclick="navigate('documents'); return false;" data-target="documents" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">ดาวน์โหลดเอกสาร</a>
+                    <a href="#stats" onclick="navigate('stats'); return false;" data-target="stats" class="nav-link h-full flex items-center px-2 text-slate-600 hover:text-blue-900 font-medium transition-all duration-150 border-b-3 border-transparent">ข้อมูลสถิติ</a>
                     <!-- สวิตช์โหมดไว้อาลัย (จอคอมพิวเตอร์) -->
                     <button type="button" class="mourning-toggle flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors" role="switch" aria-checked="false" aria-label="โหมดไว้อาลัย" title="สลับโหมดไว้อาลัย">
                         <svg class="w-3.5 h-5 flex-shrink-0" viewBox="0 0 40 60" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M20 3C12.5 3 8.5 8.2 8.5 14.5c0 5 2.8 10.2 6 15.3L3.5 56l8.5 2.2L20 39.5l8 18.7 8.5-2.2-11-26.2c3.2-5.1 6-10.3 6-15.3C31.5 8.2 27.5 3 20 3zm0 6.5c3 0 5 2.1 5 5.2 0 3-2 7-5 11.3-3-4.3-5-8.3-5-11.3 0-3.1 2-5.2 5-5.2z"/></svg>
@@ -85,10 +85,10 @@
         <!-- เมนูบนมือถือ (เปิด/ปิดอัตโนมัติ) -->
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100 pb-4 shadow-xl absolute w-full z-40">
             <div class="px-2 pt-2 pb-3 space-y-1">
-                <a href="#" onclick="navigate('home')" data-target="home" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">หน้าแรก</a>
-                <a href="#" onclick="navigate('news')" data-target="news" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">ข่าวประชาสัมพันธ์</a>
-                <a href="#" onclick="navigate('documents')" data-target="documents" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">ดาวน์โหลดเอกสาร</a>
-                <a href="#" onclick="navigate('stats')" data-target="stats" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">ข้อมูลสถิติ</a>
+                <a href="#home" onclick="navigate('home'); return false;" data-target="home" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">หน้าแรก</a>
+                <a href="#news" onclick="navigate('news'); return false;" data-target="news" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">ข่าวประชาสัมพันธ์</a>
+                <a href="#documents" onclick="navigate('documents'); return false;" data-target="documents" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">ดาวน์โหลดเอกสาร</a>
+                <a href="#stats" onclick="navigate('stats'); return false;" data-target="stats" class="nav-link-mobile block px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:text-blue-900 hover:bg-slate-50 border-l-4 border-transparent">ข้อมูลสถิติ</a>
                 <!-- สวิตช์โหมดไว้อาลัย (มือถือ) -->
                 <button type="button" class="mourning-toggle w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50 border-l-4 border-transparent" role="switch" aria-checked="false" aria-label="โหมดไว้อาลัย" title="สลับโหมดไว้อาลัย">
                     <svg class="w-4 h-6 flex-shrink-0" viewBox="0 0 40 60" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M20 3C12.5 3 8.5 8.2 8.5 14.5c0 5 2.8 10.2 6 15.3L3.5 56l8.5 2.2L20 39.5l8 18.7 8.5-2.2-11-26.2c3.2-5.1 6-10.3 6-15.3C31.5 8.2 27.5 3 20 3zm0 6.5c3 0 5 2.1 5 5.2 0 3-2 7-5 11.3-3-4.3-5-8.3-5-11.3 0-3.1 2-5.2 5-5.2z"/></svg>

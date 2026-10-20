@@ -309,50 +309,79 @@ function setDataStatus(message = '', type = 'info') {
     status.classList.toggle('hidden', !message);
 }
 
-// ฟังก์ชันระบบสลับหน้า (Single Page Application Router)
+// ================= ระบบสลับหน้า + ลิงก์แยกแต่ละหน้า (Hash Router) =================
+// แต่ละหน้ามีลิงก์ของตัวเอง: index.html (หน้าแรก), #news, #documents, #stats
+// รองรับการรีเฟรช ปุ่มย้อนกลับ/ไปข้างหน้า และการแชร์ลิงก์ตรงไปยังหน้านั้น
+const SITE_TITLE = 'งานวัดผลและประเมินผล วิทยาลัยพณิชยการเชตุพน';
+const PAGE_TITLES = {
+    home: '',
+    news: 'ข่าวประชาสัมพันธ์',
+    documents: 'แบบฟอร์มเอกสารงานวัดผล',
+    stats: 'ข้อมูลสถิติทางการศึกษา'
+};
+let currentPage = null;
+
+function getPageFromHash() {
+    const pageId = decodeURIComponent(window.location.hash.replace(/^#\/?/, ''));
+    return VALID_PAGES.has(pageId) ? pageId : 'home';
+}
+
+// เรียกจากเมนู/ปุ่ม: เปลี่ยนลิงก์บนแถบที่อยู่ แล้วแสดงหน้า
 function navigate(pageId) {
     if (!VALID_PAGES.has(pageId)) {
         pageId = 'home';
     }
 
-    // ซ่อนทุกหน้าของระบบ
-    document.querySelectorAll('.page-section').forEach(section => {
-        section.classList.add('hidden');
-    });
-    
-    // ดึงแสดงหน้าเป้าหมาย
-    const targetPage = document.getElementById('page-' + pageId);
-    if (targetPage) {
-        targetPage.classList.remove('hidden');
+    if (getPageFromHash() !== pageId) {
+        const url = pageId === 'home'
+            ? window.location.pathname + window.location.search
+            : '#' + pageId;
+        history.pushState({ page: pageId }, '', url);
     }
-    
-    // ปรับเปลี่ยนสีแถบเมนูในคอมพิวเตอร์ให้ตรงกับหน้าที่เลือกปัจจุบัน
-    document.querySelectorAll('.nav-link').forEach(link => {
-        if (link.getAttribute('data-target') === pageId) {
-            link.classList.add('active');
-        } else {
-            link.classList.remove('active');
-        }
-    });
-
-    // ปรับแถบเมนูแสดงในมือถือให้ตรงกับที่เลือก
-    document.querySelectorAll('.nav-link-mobile').forEach(link => {
-        if (link.getAttribute('data-target') === pageId) {
-            link.classList.add('active');
-        } else {
-            link.classList.remove('active');
-        }
-    });
-
-    // ซ่อนเมนูด้านข้างอัตโนมัติหากมีหน้าจอมือถือเปิดค้างไว้
-    const mobileMenu = document.getElementById('mobile-menu');
-    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-        mobileMenu.classList.add('hidden');
-    }
-
-    // เลื่อนแถบหน้าจอขึ้นไปบนสุด
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showPage(pageId);
 }
+
+function showPage(pageId, { smoothScroll = true } = {}) {
+    if (!VALID_PAGES.has(pageId)) {
+        pageId = 'home';
+    }
+    currentPage = pageId;
+
+    // ซ่อนทุกหน้าของระบบ แล้วแสดงหน้าเป้าหมาย
+    document.querySelectorAll('.page-section').forEach(section => {
+        section.classList.toggle('hidden', section.id !== 'page-' + pageId);
+    });
+
+    // ปรับสถานะเมนูทั้งจอคอมพิวเตอร์และมือถือให้ตรงกับหน้าปัจจุบัน
+    document.querySelectorAll('.nav-link, .nav-link-mobile').forEach(link => {
+        const isActive = link.getAttribute('data-target') === pageId;
+        link.classList.toggle('active', isActive);
+        if (isActive) {
+            link.setAttribute('aria-current', 'page');
+        } else {
+            link.removeAttribute('aria-current');
+        }
+    });
+
+    // ชื่อแท็บเบราว์เซอร์ตามหน้า
+    document.title = PAGE_TITLES[pageId] ? `${PAGE_TITLES[pageId]} | ${SITE_TITLE}` : SITE_TITLE;
+
+    // ซ่อนเมนูมือถือหากเปิดค้างไว้
+    document.getElementById('mobile-menu')?.classList.add('hidden');
+
+    // เลื่อนหน้าจอขึ้นไปบนสุด
+    window.scrollTo({ top: 0, behavior: smoothScroll ? 'smooth' : 'auto' });
+}
+
+// ปุ่มย้อนกลับ/ไปข้างหน้า และการพิมพ์ #ชื่อหน้า ในแถบที่อยู่
+function handleLocationChange() {
+    const pageId = getPageFromHash();
+    if (pageId !== currentPage) {
+        showPage(pageId);
+    }
+}
+window.addEventListener('popstate', handleLocationChange);
+window.addEventListener('hashchange', handleLocationChange);
 
 // ================= สวิตช์โหมดไว้อาลัย (Mourning Mode Toggle) =================
 // ค่าเริ่มต้นมาจาก <html class="mourning"> ใน index.html และจำค่าที่ผู้เข้าชมเลือกไว้ใน localStorage
@@ -409,7 +438,7 @@ document.getElementById('mobile-menu-btn').addEventListener('click', function() 
 
 // ดึงชุดข้อมูลทั้งหมดเมื่อเปิดหน้าเว็บ
 document.addEventListener('DOMContentLoaded', () => {
-    navigate('home');
+    showPage(getPageFromHash(), { smoothScroll: false }); // เปิดหน้าตามลิงก์ที่เข้ามา เช่น #documents
     renderHero(); // แสดงภาพพื้นหลังส่วนหัวทันที ไม่ต้องรอข้อมูลจาก API
     setDataStatus('กำลังโหลดข้อมูลจากระบบ…', 'info');
     initiateDataFetch();
