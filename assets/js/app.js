@@ -383,6 +383,18 @@ function handleLocationChange() {
 window.addEventListener('popstate', handleLocationChange);
 window.addEventListener('hashchange', handleLocationChange);
 
+// ทุกเมนู/ปุ่มที่มี data-target="ชื่อหน้า" จะสลับหน้าผ่านจุดนี้จุดเดียว
+document.addEventListener('click', event => {
+    const trigger = event.target.closest('[data-target]');
+    if (!trigger || !VALID_PAGES.has(trigger.dataset.target)) return;
+
+    // Ctrl/Cmd/Shift + คลิก หรือคลิกปุ่มกลาง: ให้เบราว์เซอร์เปิดแท็บใหม่ตามปกติ
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+
+    event.preventDefault();
+    navigate(trigger.dataset.target);
+});
+
 // ================= สวิตช์โหมดไว้อาลัย (Mourning Mode Toggle) =================
 // ค่าเริ่มต้นมาจาก <html class="mourning"> ใน index.html และจำค่าที่ผู้เข้าชมเลือกไว้ใน localStorage
 function updateMourningToggles() {
